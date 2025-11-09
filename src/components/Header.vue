@@ -55,7 +55,7 @@
         </div>
 
         <!-- Mobile menu button - show on sm/md -->
-        <div v-if="showMobileMenu" class="lg:hidden flex items-center">
+        <div class="lg:hidden flex items-center">
           <button
             @click="mobileMenuOpen = !mobileMenuOpen"
             class="inline-flex items-center justify-center p-2 rounded-md text-gray-700 hover:text-indigo-600 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500"
@@ -90,7 +90,6 @@
 
     <!-- Mobile menu - show on sm/md when open -->
     <Transition
-      v-if="showMobileMenu"
       enter-active-class="transition-all duration-300 ease-out"
       enter-from-class="opacity-0 -translate-y-2"
       enter-to-class="opacity-100 translate-y-0"
@@ -143,7 +142,7 @@ import { RouterLink, useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 
 interface Props {
-  showMobileMenu?: boolean
+  showMobileMenu?: boolean // Currently unused - mobile menu is always available on mobile screens
 }
 
 withDefaults(defineProps<Props>(), {
