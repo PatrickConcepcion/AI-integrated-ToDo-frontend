@@ -1,46 +1,7 @@
 <template>
   <div class="min-h-screen bg-gray-50">
     <!-- Header/Navigation -->
-    <nav class="bg-white shadow-sm border-b border-gray-200">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex justify-between h-16">
-          <div class="flex items-center">
-            <h1 class="text-2xl font-bold text-indigo-600">AI Todo</h1>
-          </div>
-
-          <div class="flex items-center space-x-4">
-            <RouterLink
-              to="/"
-              class="text-gray-700 hover:text-indigo-600 px-3 py-2 text-sm font-medium"
-            >
-              Tasks
-            </RouterLink>
-            <RouterLink
-              to="/archived"
-              class="text-indigo-600 px-3 py-2 text-sm font-medium border-b-2 border-indigo-600"
-            >
-              Archived
-            </RouterLink>
-            <RouterLink
-              v-if="authStore.isAdmin"
-              to="/admin"
-              class="text-gray-700 hover:text-indigo-600 px-3 py-2 text-sm font-medium"
-            >
-              AI Chat
-            </RouterLink>
-            <div class="text-sm text-gray-600">
-              {{ authStore.user?.name }}
-            </div>
-            <button
-              @click="handleLogout"
-              class="text-gray-700 hover:text-red-600 px-3 py-2 text-sm font-medium"
-            >
-              Logout
-            </button>
-          </div>
-        </div>
-      </div>
-    </nav>
+    <Header :show-mobile-menu="false" />
 
     <!-- Main Content -->
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -115,13 +76,10 @@
 
 <script setup>
 import { onMounted } from 'vue'
-import { RouterLink, useRouter } from 'vue-router'
-import { useAuthStore } from '../stores/auth'
 import { useTasksStore } from '../stores/tasks'
 import { debounce } from 'lodash-es'
+import Header from '../components/Header.vue'
 
-const router = useRouter()
-const authStore = useAuthStore()
 const tasksStore = useTasksStore()
 
 onMounted(async () => {
@@ -134,10 +92,5 @@ const unarchiveTask = debounce(async (taskId) => {
   } catch (error) {
     console.error('Failed to unarchive task:', error)
   }
-}, 300)
-
-const handleLogout = debounce(async () => {
-  await authStore.logout()
-  router.push('/login')
 }, 300)
 </script>
