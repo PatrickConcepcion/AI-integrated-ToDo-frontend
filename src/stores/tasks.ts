@@ -191,6 +191,38 @@ export const useTasksStore = defineStore('tasks', () => {
     }
   }
 
+  // Update category
+  const updateCategory = async (categoryId: number, categoryData: Record<string, unknown>): Promise<Category> => {
+    try {
+      const response = await api.put(`/categories/${categoryId}`, categoryData)
+      const index = categories.value.findIndex((c) => c.id === categoryId)
+      if (index !== -1) {
+        categories.value[index] = response.data.data
+      }
+      return response.data.data
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error
+        ? (err as any).response?.data?.message || 'Failed to update category'
+        : 'Failed to update category'
+      error.value = errorMessage
+      throw err
+    }
+  }
+
+  // Delete category
+  const deleteCategory = async (categoryId: number): Promise<void> => {
+    try {
+      await api.delete(`/categories/${categoryId}`)
+      categories.value = categories.value.filter((c) => c.id !== categoryId)
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error
+        ? (err as any).response?.data?.message || 'Failed to delete category'
+        : 'Failed to delete category'
+      error.value = errorMessage
+      throw err
+    }
+  }
+
   return {
     tasks,
     archivedTasks,
@@ -208,5 +240,7 @@ export const useTasksStore = defineStore('tasks', () => {
     unarchiveTask,
     fetchCategories,
     createCategory,
+    updateCategory,
+    deleteCategory,
   }
 })

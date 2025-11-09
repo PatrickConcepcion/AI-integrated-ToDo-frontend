@@ -73,7 +73,6 @@ import { useAuthStore } from '../stores/auth'
 import { loginSchema } from '../validators/auth'
 import { useForm, Field, ErrorMessage } from 'vee-validate'
 import { toTypedSchema } from '@vee-validate/zod'
-import { debounce } from 'lodash-es'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -82,7 +81,7 @@ const { handleSubmit, errors } = useForm({
   validationSchema: toTypedSchema(loginSchema),
 })
 
-const handleLogin = handleSubmit(debounce(async (values) => {
+const handleLogin = handleSubmit(async (values) => {
   try {
     await authStore.login({
       email: values.email,
@@ -92,5 +91,5 @@ const handleLogin = handleSubmit(debounce(async (values) => {
   } catch (error) {
     console.error('Login failed:', error)
   }
-}, 300))
+})
 </script>

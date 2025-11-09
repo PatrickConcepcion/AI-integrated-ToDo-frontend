@@ -39,6 +39,11 @@ export const categorySchema = z.object({
     .string({ required_error: 'Category name is required' })
     .min(1, { message: 'Category name is required' })
     .max(255, { message: 'Category name must not exceed 255 characters' }),
+  description: z
+    .string()
+    .max(500, { message: 'Description must not exceed 500 characters' })
+    .optional()
+    .or(z.literal('')),
   color: z
     .string({ required_error: 'Color is required' })
     .min(1, { message: 'Color is required' })

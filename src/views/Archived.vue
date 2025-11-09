@@ -1,7 +1,7 @@
 <template>
   <div class="min-h-screen bg-gray-50">
     <!-- Header/Navigation -->
-    <Header :show-mobile-menu="false" />
+    <Header />
 
     <!-- Main Content -->
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -75,22 +75,39 @@
 </template>
 
 <script setup>
+<<<<<<< HEAD
+import { ref, onMounted } from 'vue'
+import { useTasksStore } from '../stores/tasks'
+=======
 import { onMounted } from 'vue'
 import { useTasksStore } from '../stores/tasks'
 import { debounce } from 'lodash-es'
+>>>>>>> origin/master
 import Header from '../components/Header.vue'
 
 const tasksStore = useTasksStore()
+
+// Loading states
+const unarchivingTaskId = ref(null)
 
 onMounted(async () => {
   await tasksStore.fetchArchivedTasks()
 })
 
-const unarchiveTask = debounce(async (taskId) => {
+const unarchiveTask = async (taskId) => {
+  if (unarchivingTaskId.value) return // Prevent concurrent operations
+
+  unarchivingTaskId.value = taskId
   try {
     await tasksStore.unarchiveTask(taskId)
   } catch (error) {
     console.error('Failed to unarchive task:', error)
+  } finally {
+    unarchivingTaskId.value = null
   }
+<<<<<<< HEAD
+}
+=======
 }, 300)
+>>>>>>> origin/master
 </script>

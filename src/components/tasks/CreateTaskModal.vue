@@ -78,9 +78,10 @@
           </button>
           <button
             type="submit"
-            class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-medium"
+            :disabled="isSubmitting"
+            class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Create Task
+            {{ isSubmitting ? 'Creating...' : 'Create Task' }}
           </button>
         </div>
       </form>
@@ -89,9 +90,9 @@
 </template>
 
 <script setup lang="ts">
+import { ref } from 'vue'
 import { useForm, Field, ErrorMessage } from 'vee-validate'
 import { toTypedSchema } from '@vee-validate/zod'
-import { debounce } from 'lodash-es'
 import { useTasksStore } from '../../stores/tasks'
 import { taskSchema } from '../../validators/task'
 
@@ -108,6 +109,8 @@ const emit = defineEmits<{
   'created': []
 }>()
 
+const isSubmitting = ref(false)
+
 // vee-validate form setup
 const { handleSubmit, errors: formErrors, resetForm } = useForm({
   validationSchema: toTypedSchema(taskSchema),
@@ -120,7 +123,8 @@ const { handleSubmit, errors: formErrors, resetForm } = useForm({
   },
 })
 
-const handleCreateTask = handleSubmit(debounce(async (values) => {
+const handleCreateTask = handleSubmit(async (values) => {
+  isSubmitting.value = true
   try {
     await tasksStore.createTask(values)
     emit('created')
@@ -128,6 +132,8 @@ const handleCreateTask = handleSubmit(debounce(async (values) => {
     resetForm()
   } catch (error) {
     console.error('Failed to create task:', error)
+  } finally {
+    isSubmitting.value = false
   }
-}, 300))
+})
 </script>
