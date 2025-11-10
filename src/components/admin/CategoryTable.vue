@@ -4,9 +4,9 @@
     <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
       <h4 class="text-sm font-medium text-gray-700 mb-3">Add New Category</h4>
       <form @submit="handleCreateCategory" class="space-y-3">
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
           <!-- Name Input -->
-          <div>
+          <div class="flex flex-col">
             <label for="new-name" class="block text-xs font-medium text-gray-700 mb-1">Name *</label>
             <Field
               id="new-name"
@@ -15,11 +15,13 @@
               placeholder="Enter category name"
               class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-sm"
             />
-            <ErrorMessage name="name" class="text-xs text-red-600 mt-1" />
+            <div class="h-5">
+              <ErrorMessage name="name" class="text-xs text-red-600" />
+            </div>
           </div>
 
           <!-- Description Input -->
-          <div>
+          <div class="flex flex-col">
             <label for="new-description" class="block text-xs font-medium text-gray-700 mb-1">Description</label>
             <Field
               id="new-description"
@@ -28,33 +30,38 @@
               placeholder="Enter description (optional)"
               class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-sm"
             />
-            <ErrorMessage name="description" class="text-xs text-red-600 mt-1" />
+            <div class="h-5">
+              <ErrorMessage name="description" class="text-xs text-red-600" />
+            </div>
           </div>
 
           <!-- Color Picker -->
-          <div>
+          <div class="flex flex-col">
             <label for="new-color" class="block text-xs font-medium text-gray-700 mb-1">Color *</label>
             <div class="flex items-center gap-2">
               <Field
                 id="new-color"
                 name="color"
                 type="color"
-                class="h-10 w-16 border border-gray-300 rounded cursor-pointer"
+                class="h-10 w-16 border border-gray-300 rounded cursor-pointer flex-shrink-0"
                 @change="validateHexColor"
               />
               <input
                 type="text"
                 v-model="newCategoryColor"
                 placeholder="#000000"
-                class="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-sm"
+                class="flex-1 min-w-0 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-sm"
                 @input="handleHexInput"
               />
             </div>
-            <ErrorMessage name="color" class="text-xs text-red-600 mt-1" />
+            <div class="h-5">
+              <ErrorMessage name="color" class="text-xs text-red-600" />
+            </div>
           </div>
 
           <!-- Submit Button -->
-          <div class="flex items-end">
+          <div class="flex flex-col">
+            <div class="flex-1"></div>
             <button
               type="submit"
               :disabled="isCreating"
@@ -62,6 +69,7 @@
             >
               {{ isCreating ? 'Adding...' : 'Add Category' }}
             </button>
+            <div class="h-5"></div>
           </div>
         </div>
       </form>
