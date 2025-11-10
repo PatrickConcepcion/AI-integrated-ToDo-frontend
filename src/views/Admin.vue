@@ -28,7 +28,6 @@
   </div>
 </template>
 
-<<<<<<< HEAD
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import Header from '../components/Header.vue'
@@ -48,16 +47,4 @@ onMounted(async () => {
     loading.value = false
   }
 })
-=======
-<script setup>
-import { ref } from 'vue'
-import Header from '../components/Header.vue'
-
-const message = ref('')
-
-const sendMessage = () => {
-  // TODO: Implement AI chat integration
-  console.log('Send message:', message.value)
-}
->>>>>>> origin/master
 </script>

@@ -75,14 +75,8 @@
 </template>
 
 <script setup>
-<<<<<<< HEAD
 import { ref, onMounted } from 'vue'
 import { useTasksStore } from '../stores/tasks'
-=======
-import { onMounted } from 'vue'
-import { useTasksStore } from '../stores/tasks'
-import { debounce } from 'lodash-es'
->>>>>>> origin/master
 import Header from '../components/Header.vue'
 
 const tasksStore = useTasksStore()
@@ -105,9 +99,5 @@ const unarchiveTask = async (taskId) => {
   } finally {
     unarchivingTaskId.value = null
   }
-<<<<<<< HEAD
 }
-=======
-}, 300)
->>>>>>> origin/master
 </script>
