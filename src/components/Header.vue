@@ -119,11 +119,7 @@
           @click="mobileMenuOpen = false"
           class="block text-gray-700 hover:text-indigo-600 hover:bg-gray-50 px-3 py-2 rounded-md text-base font-medium"
         >
-<<<<<<< HEAD
           Admin
-=======
-          AI Chat
->>>>>>> origin/master
         </RouterLink>
         <div class="px-3 py-2 text-base text-gray-600 border-t border-gray-200">
           {{ authStore.user?.name }}
