@@ -47,10 +47,6 @@
         <div class="text-gray-500">Loading tasks...</div>
       </div>
 
-      <div v-else-if="tasksStore.tasks.length === 0" class="text-center py-12 bg-white rounded-lg shadow">
-        <p class="text-gray-500">No tasks found. Create your first task!</p>
-      </div>
-
       <div v-else class="grid grid-cols-1 md:grid-cols-3 gap-6">
         <!-- Todo Column -->
         <div class="bg-gray-100 rounded-lg p-3" @dragover.prevent @drop="onDrop('todo', $event)">
@@ -120,7 +116,6 @@
 <script setup lang="ts">
 import { ref, onMounted, reactive, computed } from 'vue'
 import { useTasksStore } from '../stores/tasks'
-import { debounce } from 'lodash-es'
 import TaskCard from '../components/tasks/TaskCard.vue'
 import CreateTaskModal from '../components/tasks/CreateTaskModal.vue'
 import EditTaskModal from '../components/tasks/EditTaskModal.vue'
@@ -136,6 +131,11 @@ const filters = reactive({
   category_id: '',
   priority: '',
 })
+
+// Loading states
+const togglingTaskId = ref<number | null>(null)
+const archivingTaskId = ref<number | null>(null)
+const deletingTaskId = ref<number | null>(null)
 
 onMounted(async () => {
   await tasksStore.fetchCategories()
@@ -163,13 +163,18 @@ const openEditModal = (task: Task) => {
   showEditModal.value = true
 }
 
-const toggleComplete = debounce(async (taskId: number): Promise<void> => {
+const toggleComplete = async (taskId: number): Promise<void> => {
+  if (togglingTaskId.value) return // Prevent concurrent toggles
+
+  togglingTaskId.value = taskId
   try {
     await tasksStore.toggleComplete(taskId)
   } catch (error) {
     console.error('Failed to toggle task:', error)
+  } finally {
+    togglingTaskId.value = null
   }
-}, 300)
+}
 
 // Kanban drag-and-drop
 const onDragStart = (task: any, event: DragEvent): void => {
@@ -190,23 +195,33 @@ const todoTasks = computed(() => tasksStore.tasks.filter(t => t.status === 'todo
 const inProgressTasks = computed(() => tasksStore.tasks.filter(t => t.status === 'in_progress'))
 const completedTasks = computed(() => tasksStore.tasks.filter(t => t.status === 'completed'))
 
-const archiveTask = debounce(async (taskId: number): Promise<void> => {
-  if (confirm('Archive this task?')) {
-    try {
-      await tasksStore.archiveTask(taskId)
-    } catch (error) {
-      console.error('Failed to archive task:', error)
-    }
-  }
-}, 300)
+const archiveTask = async (taskId: number): Promise<void> => {
+  if (archivingTaskId.value) return // Prevent concurrent operations
 
-const deleteTask = debounce(async (taskId: number): Promise<void> => {
-  if (confirm('Delete this task permanently?')) {
-    try {
-      await tasksStore.deleteTask(taskId)
-    } catch (error) {
-      console.error('Failed to delete task:', error)
-    }
+  if (!confirm('Archive this task?')) return
+
+  archivingTaskId.value = taskId
+  try {
+    await tasksStore.archiveTask(taskId)
+  } catch (error) {
+    console.error('Failed to archive task:', error)
+  } finally {
+    archivingTaskId.value = null
   }
-}, 300)
+}
+
+const deleteTask = async (taskId: number): Promise<void> => {
+  if (deletingTaskId.value) return // Prevent concurrent operations
+
+  if (!confirm('Delete this task permanently?')) return
+
+  deletingTaskId.value = taskId
+  try {
+    await tasksStore.deleteTask(taskId)
+  } catch (error) {
+    console.error('Failed to delete task:', error)
+  } finally {
+    deletingTaskId.value = null
+  }
+}
 </script>

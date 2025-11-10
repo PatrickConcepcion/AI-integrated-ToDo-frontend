@@ -99,7 +99,6 @@ import { useAuthStore } from '../stores/auth'
 import { registerSchema } from '../validators/auth'
 import { useForm, Field, ErrorMessage } from 'vee-validate'
 import { toTypedSchema } from '@vee-validate/zod'
-import { debounce } from 'lodash-es'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -108,7 +107,7 @@ const { handleSubmit, errors } = useForm({
   validationSchema: toTypedSchema(registerSchema),
 })
 
-const handleRegister = handleSubmit(debounce(async (values) => {
+const handleRegister = handleSubmit(async (values) => {
   try {
     await authStore.register({
       name: values.name,
@@ -120,5 +119,5 @@ const handleRegister = handleSubmit(debounce(async (values) => {
   } catch (error) {
     console.error('Registration failed:', error)
   }
-}, 300))
+})
 </script>
