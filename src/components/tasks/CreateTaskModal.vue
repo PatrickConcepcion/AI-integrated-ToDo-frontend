@@ -2,7 +2,7 @@
   <div v-if="show" class="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
     <div class="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
       <h3 class="text-lg font-medium text-gray-900 mb-4">Create New Task</h3>
-      <form @submit="handleCreateTask" class="space-y-4" novalidate>
+      <form @submit.prevent="handleCreateTask" class="space-y-4" novalidate>
         <div>
           <label class="block text-sm font-medium text-gray-700">Title</label>
           <Field
@@ -36,7 +36,7 @@
             class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
           >
             <option value="">No Category</option>
-            <option v-for="category in tasksStore.categories" :key="category.id" :value="category.id">
+            <option v-for="category in tasksStore.categories" :key="category.id" :value="String(category.id)">
               {{ category.name }}
             </option>
           </Field>

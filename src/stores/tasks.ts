@@ -36,7 +36,7 @@ export const useTasksStore = defineStore('tasks', () => {
     error.value = null
 
     try {
-      const response = await api.get('/tasks-archived')
+      const response = await api.get('/tasks/archived')
       archivedTasks.value = response.data.data
     } catch (err: unknown) {
       const errorMessage = err instanceof Error
