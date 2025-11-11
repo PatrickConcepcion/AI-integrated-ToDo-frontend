@@ -75,6 +75,32 @@ export const useAiStore = defineStore('ai', () => {
   }
 
   /**
+   * Fetch conversation history from backend
+   */
+  const fetchMessages = async (): Promise<void> => {
+    try {
+      const response = await api.get('/ai/messages')
+
+      if (response.data.success && response.data.messages) {
+        // Transform backend messages to ChatMessage format
+        messages.value = response.data.messages.map((msg: any) => ({
+          id: msg.id.toString(),
+          role: msg.is_ai_response ? 'assistant' : 'user',
+          content: msg.content,
+          timestamp: new Date(msg.created_at),
+        }))
+      }
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error
+        ? (err as any).response?.data?.message || 'Failed to load message history'
+        : 'Failed to load message history'
+
+      error.value = errorMessage
+      console.error('Failed to fetch messages:', err)
+    }
+  }
+
+  /**
    * Clear chat history (both frontend and backend)
    */
   const clearChat = async (): Promise<void> => {
@@ -113,6 +139,7 @@ export const useAiStore = defineStore('ai', () => {
     loading,
     error,
     sendMessage,
+    fetchMessages,
     clearChat,
     addSystemMessage,
   }
