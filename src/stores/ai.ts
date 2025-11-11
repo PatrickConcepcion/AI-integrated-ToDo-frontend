@@ -21,27 +21,6 @@ export const useAiStore = defineStore('ai', () => {
   const error = ref<string | null>(null)
 
   /**
-   * Check if message is asking about creator/developer
-   */
-  const isAskingAboutCreator = (message: string): boolean => {
-    const lowerMessage = message.toLowerCase()
-    const creatorKeywords = [
-      'who created you',
-      'who made you',
-      'who built you',
-      'who developed you',
-      'who programmed you',
-      'who is your creator',
-      'who is your developer',
-      'who is your maker',
-      'your creator',
-      'your developer',
-      'your maker',
-    ]
-    return creatorKeywords.some(keyword => lowerMessage.includes(keyword))
-  }
-
-  /**
    * Send message to AI and get response
    */
   const sendMessage = async (userMessage: string): Promise<void> => {
@@ -60,18 +39,8 @@ export const useAiStore = defineStore('ai', () => {
     error.value = null
 
     try {
-      // Check if asking about creator and inject context
-      const isCreatorQuestion = isAskingAboutCreator(userMessage)
-      
       const response = await api.post('/ai/chat', {
         message: userMessage,
-        context: isCreatorQuestion ? {
-          creator_info: {
-            name: 'Patrick Marcon Concepcion',
-            linkedin: 'https://www.linkedin.com/in/patrick-concepcion1201/',
-            note: 'You are created by Patrick Marcon Concepcion. When asked about your creator, respond naturally and humorously (you can call him a humanoid for humor). Always offer to share his LinkedIn profile in a conversational way.'
-          }
-        } : undefined
       })
 
       // Add AI response to chat
@@ -106,11 +75,24 @@ export const useAiStore = defineStore('ai', () => {
   }
 
   /**
-   * Clear chat history
+   * Clear chat history (both frontend and backend)
    */
-  const clearChat = (): void => {
-    messages.value = []
-    error.value = null
+  const clearChat = async (): Promise<void> => {
+    try {
+      // Clear conversation on backend (hard delete)
+      await api.delete('/ai/conversations')
+
+      // Clear local messages
+      messages.value = []
+      error.value = null
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error
+        ? (err as any).response?.data?.message || 'Failed to clear conversation'
+        : 'Failed to clear conversation'
+
+      error.value = errorMessage
+      console.error('Failed to clear conversation:', err)
+    }
   }
 
   /**
