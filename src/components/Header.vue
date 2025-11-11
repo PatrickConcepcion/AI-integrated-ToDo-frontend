@@ -36,6 +36,13 @@
             Archived
           </RouterLink>
           <RouterLink
+            to="/ai-assistant"
+            class="text-gray-700 hover:text-indigo-600 px-3 py-2 text-sm font-medium"
+            :class="{ 'text-indigo-600 border-b-2 border-indigo-600': $route.path === '/ai-assistant' }"
+          >
+            AI Assistant
+          </RouterLink>
+          <RouterLink
             v-if="authStore.isAdmin"
             to="/admin"
             class="text-gray-700 hover:text-indigo-600 px-3 py-2 text-sm font-medium"
@@ -112,6 +119,13 @@
           class="block text-gray-700 hover:text-indigo-600 hover:bg-gray-50 px-3 py-2 rounded-md text-base font-medium"
         >
           Archived
+        </RouterLink>
+        <RouterLink
+          to="/ai-assistant"
+          @click="mobileMenuOpen = false"
+          class="block text-gray-700 hover:text-indigo-600 hover:bg-gray-50 px-3 py-2 rounded-md text-base font-medium"
+        >
+          AI Assistant
         </RouterLink>
         <RouterLink
           v-if="authStore.isAdmin"
