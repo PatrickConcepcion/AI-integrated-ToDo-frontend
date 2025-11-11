@@ -21,7 +21,7 @@ const routes: RouteRecordRaw[] = [
     meta: { requiresAuth: true },
   },
   {
-    path: '/archived',
+    path: '/tasks/archived',
     name: 'Archived',
     component: () => import('../views/Archived.vue'),
     meta: { requiresAuth: true },

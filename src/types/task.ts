@@ -28,7 +28,6 @@ export interface CreateTaskInput {
 }
 
 export interface UpdateTaskInput {
-  id: number
   name?: string
   description?: string
   completed?: boolean

@@ -15,7 +15,7 @@
         <p v-if="task.description" class="text-sm text-gray-600 mt-1">
           {{ task.description }}
         </p>
-        <div class="flex items-center gap-2 mt-2">
+        <div class="flex flex-wrap items-center gap-2 mt-2">
           <span
             v-if="task.category"
             class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium"

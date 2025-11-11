@@ -3,7 +3,7 @@
     <!-- Add New Category Form -->
     <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
       <h4 class="text-sm font-medium text-gray-700 mb-3">Add New Category</h4>
-      <form @submit="handleCreateCategory" class="space-y-3">
+      <form @submit.prevent="handleCreateCategory" class="space-y-3">
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
           <!-- Name Input -->
           <div class="flex flex-col">

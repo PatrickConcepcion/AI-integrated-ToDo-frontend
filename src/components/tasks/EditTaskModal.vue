@@ -18,7 +18,7 @@
       >
         <div v-if="show" class="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
           <h3 class="text-lg font-medium text-gray-900 mb-4">Edit Task</h3>
-          <form @submit="handleEditTask" class="space-y-4" novalidate>
+          <form @submit.prevent="handleEditTask" class="space-y-4" novalidate>
             <div>
               <label class="block text-sm font-medium text-gray-700">Title</label>
               <Field
@@ -52,7 +52,7 @@
                 class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
               >
                 <option value="">No Category</option>
-                <option v-for="category in tasksStore.categories" :key="category.id" :value="category.id">
+                <option v-for="category in tasksStore.categories" :key="category.id" :value="String(category.id)">
                   {{ category.name }}
                 </option>
               </Field>
@@ -149,7 +149,7 @@ watch(() => props.task, (newTask) => {
     setValues({
       title: newTask.title,
       description: newTask.description || '',
-      category_id: newTask.category_id || '',
+      category_id: newTask.category_id ? String(newTask.category_id) : '',
       priority: newTask.priority || 'medium',
       due_date: newTask.due_date ? newTask.due_date.split('T')[0] : '',
     })
