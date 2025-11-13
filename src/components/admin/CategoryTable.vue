@@ -96,14 +96,14 @@
         </thead>
         <tbody class="bg-white divide-y divide-gray-200">
           <!-- Empty State -->
-          <tr v-if="tasksStore.categories.length === 0">
+          <tr v-if="categoriesStore.categories.length === 0">
             <td colspan="4" class="px-6 py-4 text-center text-sm text-gray-500">
               No categories yet. Add one above to get started.
             </td>
           </tr>
 
           <!-- Category Rows -->
-          <tr v-for="category in tasksStore.categories" :key="category.id" class="hover:bg-gray-50">
+          <tr v-for="category in categoriesStore.categories" :key="category.id" class="hover:bg-gray-50">
             <td class="px-6 py-4 whitespace-nowrap">
               <div v-if="editingId === category.id">
                 <input
@@ -201,11 +201,11 @@
 import { ref, reactive } from 'vue'
 import { useForm, Field, ErrorMessage } from 'vee-validate'
 import { toTypedSchema } from '@vee-validate/zod'
-import { useTasksStore } from '../../stores/tasks'
+import { useCategoriesStore } from '../../stores/categories'
 import { categorySchema } from '../../validators/task'
-import type { Category } from '../../types/task'
+import type { Category } from '../../types/category'
 
-const tasksStore = useTasksStore()
+const categoriesStore = useCategoriesStore()
 
 // New category form
 const { handleSubmit, resetForm, setFieldValue } = useForm({
@@ -266,7 +266,7 @@ const isDeleting = ref<number | null>(null)
 const handleCreateCategory = handleSubmit(async (values) => {
   isCreating.value = true
   try {
-    await tasksStore.createCategory({
+    await categoriesStore.createCategory({
       ...values,
       color: newCategoryColor.value,
     })
@@ -339,7 +339,7 @@ const handleSaveEdit = async (categoryId: number) => {
 
   isSaving.value = true
   try {
-    await tasksStore.updateCategory(categoryId, {
+    await categoriesStore.updateCategory(categoryId, {
       name: editForm.name,
       description: editForm.description || '',
       color: editForm.color,
@@ -360,7 +360,7 @@ const handleDelete = async (categoryId: number, categoryName: string) => {
 
   isDeleting.value = categoryId
   try {
-    await tasksStore.deleteCategory(categoryId)
+    await categoriesStore.deleteCategory(categoryId)
   } catch (error) {
     console.error('Failed to delete category:', error)
   } finally {

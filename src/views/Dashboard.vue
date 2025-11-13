@@ -23,7 +23,7 @@
           class="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
         >
           <option value="">All Categories</option>
-          <option v-for="category in tasksStore.categories" :key="category.id" :value="category.id">
+          <option v-for="category in categoriesStore.categories" :key="category.id" :value="category.id">
             {{ category.name }}
           </option>
         </select>
@@ -116,6 +116,7 @@
 <script setup lang="ts">
 import { ref, onMounted, reactive, computed } from 'vue'
 import { useTasksStore } from '../stores/tasks'
+import { useCategoriesStore } from '../stores/categories'
 import TaskCard from '../components/tasks/TaskCard.vue'
 import CreateTaskModal from '../components/tasks/CreateTaskModal.vue'
 import EditTaskModal from '../components/tasks/EditTaskModal.vue'
@@ -123,6 +124,7 @@ import Header from '../components/Header.vue'
 import type { Task } from '../types/task'
 
 const tasksStore = useTasksStore()
+const categoriesStore = useCategoriesStore()
 
 const showCreateModal = ref(false)
 const showEditModal = ref(false)
@@ -138,7 +140,7 @@ const archivingTaskId = ref<number | null>(null)
 const deletingTaskId = ref<number | null>(null)
 
 onMounted(async () => {
-  await tasksStore.fetchCategories()
+  await categoriesStore.fetchCategories()
   await loadTasks()
 })
 

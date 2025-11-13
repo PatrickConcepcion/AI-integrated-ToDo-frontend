@@ -1,24 +1,14 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import api from '../api/axios'
-
-export interface ChatMessage {
-  id: string
-  role: 'user' | 'assistant'
-  content: string
-  timestamp: Date
-  actionsPerformed?: Array<{
-    success: boolean
-    action?: string
-    task_id?: number
-    message: string
-  }>
-}
+import { useToast } from '../composables/useToast'
+import type { ChatMessage, BackendMessage } from '../types/ai'
 
 export const useAiStore = defineStore('ai', () => {
   const messages = ref<ChatMessage[]>([])
   const loading = ref(false)
   const error = ref<string | null>(null)
+  const { success, error: toastError } = useToast()
 
   /**
    * Send message to AI and get response
@@ -59,6 +49,7 @@ export const useAiStore = defineStore('ai', () => {
         : 'Failed to get AI response'
 
       error.value = errorMessage
+      toastError(errorMessage)
 
       // Add error message to chat
       const errorMsg: ChatMessage = {
@@ -75,6 +66,44 @@ export const useAiStore = defineStore('ai', () => {
   }
 
   /**
+   * Fetch conversation history from backend
+   */
+  const fetchMessages = async (): Promise<void> => {
+    loading.value = true
+    try {
+      const response = await api.get('/ai/messages')
+
+      if (response.data.success && response.data.messages) {
+        // Clear any previous errors on successful response
+        error.value = null
+
+        // Transform backend messages to ChatMessage format
+        messages.value = response.data.messages.map((msg: BackendMessage) => ({
+          id: msg.id.toString(),
+          role: msg.is_ai_response ? 'assistant' : 'user',
+          content: msg.content,
+          timestamp: new Date(msg.created_at),
+        }))
+      } else {
+        // Handle unsuccessful response
+        const errorMessage = 'Failed to load message history: Invalid response format'
+        error.value = errorMessage
+        messages.value = []
+        console.error('Failed to fetch messages - invalid response:', response)
+      }
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error
+        ? (err as any).response?.data?.message || 'Failed to load message history'
+        : 'Failed to load message history'
+
+      error.value = errorMessage
+      console.error('Failed to fetch messages:', err)
+    } finally {
+      loading.value = false
+    }
+  }
+
+  /**
    * Clear chat history (both frontend and backend)
    */
   const clearChat = async (): Promise<void> => {
@@ -85,12 +114,14 @@ export const useAiStore = defineStore('ai', () => {
       // Clear local messages
       messages.value = []
       error.value = null
+      success('Chat history cleared successfully!')
     } catch (err: unknown) {
       const errorMessage = err instanceof Error
         ? (err as any).response?.data?.message || 'Failed to clear conversation'
         : 'Failed to clear conversation'
 
       error.value = errorMessage
+      toastError(errorMessage)
       console.error('Failed to clear conversation:', err)
     }
   }
@@ -112,6 +143,7 @@ export const useAiStore = defineStore('ai', () => {
     messages,
     loading,
     error,
+    fetchMessages,
     sendMessage,
     clearChat,
     addSystemMessage,

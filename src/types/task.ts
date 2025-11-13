@@ -8,13 +8,12 @@ export interface Task {
   userId: number
   createdAt: string
   updatedAt: string
-  archivedAt?: string | null
   title?: string
   category_id?: number
   priority?: TaskPriority
   due_date?: string
   notes?: string
-  status?: 'todo' | 'in_progress' | 'completed'
+  status?: 'todo' | 'in_progress' | 'completed' | 'archived'
 }
 
 export interface CreateTaskInput {
@@ -37,13 +36,4 @@ export interface UpdateTaskInput {
   due_date?: string
   notes?: string
   status?: string
-}
-
-export interface Category {
-  id: number
-  name: string
-  description?: string
-  color: string
-  created_at: string
-  updated_at: string
 }

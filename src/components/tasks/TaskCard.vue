@@ -4,12 +4,12 @@
       <button
         @click.stop="$emit('complete', task.id)"
         class="mt-1 h-5 w-5 flex items-center justify-center rounded border border-gray-300 text-indigo-600 hover:bg-indigo-50"
-        :title="task.completed_at ? 'Mark as Incomplete' : 'Mark as Completed'"
+        :title="task.status === 'completed' ? 'Mark as Incomplete' : 'Mark as Completed'"
       >
-        <span v-if="task.completed_at">✓</span>
+        <span v-if="task.status === 'completed'">✓</span>
       </button>
       <div class="flex-1">
-        <h3 :class="['text-lg font-medium', task.completed_at ? 'line-through text-gray-400' : 'text-gray-900']">
+        <h3 :class="['text-lg font-medium', task.status === 'completed' ? 'line-through text-gray-400' : 'text-gray-900']">
           {{ task.title }}
         </h3>
         <p v-if="task.description" class="text-sm text-gray-600 mt-1">

@@ -1,13 +1,17 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import api from '../api/axios'
-import type { User, UserRole, LoginCredentials, RegisterData } from '../types'
+import type { User, UserRole } from '../types/user'
+import type { LoginCredentials, RegisterData } from '../types/auth'
+import { useToast } from '../composables/useToast'
 
 export const useAuthStore = defineStore('auth', () => {
   const user = ref<User | null>(null)
   const token = ref<string | null>(null)
   const loading = ref(false)
   const error = ref<string | null>(null)
+  const users = ref<User[]>([])
+  const { success, error: toastError } = useToast()
 
   // Computed
   const isAuthenticated = computed(() => !!token.value)
@@ -49,19 +53,21 @@ export const useAuthStore = defineStore('auth', () => {
       // Fetch user profile
       await fetchUser()
 
+      success('Successfully logged in!')
       return true
     } catch (err: unknown) {
       const errorMessage = err instanceof Error
         ? (err as any).response?.data?.message || 'Login failed'
         : 'Login failed'
       error.value = errorMessage
+      toastError(errorMessage)
       throw err
     } finally {
       loading.value = false
     }
   }
 
-  // Register
+    // Register
   const register = async (userData: RegisterData): Promise<boolean> => {
     loading.value = true
     error.value = null
@@ -76,12 +82,14 @@ export const useAuthStore = defineStore('auth', () => {
       // Fetch user profile
       await fetchUser()
 
+      success('Account created successfully!')
       return true
     } catch (err: unknown) {
       const errorMessage = err instanceof Error
         ? (err as any).response?.data?.message || 'Registration failed'
         : 'Registration failed'
       error.value = errorMessage
+      toastError(errorMessage)
       throw err
     } finally {
       loading.value = false
@@ -119,6 +127,51 @@ export const useAuthStore = defineStore('auth', () => {
     return user.value?.roles?.includes(role) ?? false
   }
 
+  // Fetch all users (admin only)
+  const fetchUsers = async (): Promise<void> => {
+    try {
+      const response = await api.get('/admin/users')
+      users.value = response.data.data
+    } catch (err) {
+      console.error('Failed to fetch users:', err)
+      throw err
+    }
+  }
+
+  // Ban user (admin only)
+  const banUser = async (userId: number): Promise<void> => {
+    try {
+      await api.post(`/admin/users/${userId}/ban`)
+      // Update the user in the list
+      const userIndex = users.value.findIndex(u => u.id === userId)
+      if (userIndex !== -1) {
+        users.value[userIndex].is_banned = true
+      }
+      success('User has been banned successfully')
+    } catch (err) {
+      console.error('Failed to ban user:', err)
+      toastError('Failed to ban user')
+      throw err
+    }
+  }
+
+  // Unban user (admin only)
+  const unbanUser = async (userId: number): Promise<void> => {
+    try {
+      await api.post(`/admin/users/${userId}/unban`)
+      // Update the user in the list
+      const userIndex = users.value.findIndex(u => u.id === userId)
+      if (userIndex !== -1) {
+        users.value[userIndex].is_banned = false
+      }
+      success('User has been unbanned successfully')
+    } catch (err) {
+      console.error('Failed to unban user:', err)
+      toastError('Failed to unban user')
+      throw err
+    }
+  }
+
   // Initialize on store creation
   initializeAuth()
 
@@ -127,12 +180,16 @@ export const useAuthStore = defineStore('auth', () => {
     token,
     loading,
     error,
+    users,
     isAuthenticated,
     isAdmin,
     hasRole,
     login,
     register,
     fetchUser,
+    fetchUsers,
+    banUser,
+    unbanUser,
     logout,
   }
 })
