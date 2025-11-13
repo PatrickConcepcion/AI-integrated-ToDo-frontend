@@ -249,6 +249,7 @@ watch(
 // Fetch tasks on mount and scroll to bottom
 onMounted(async () => {
   await tasksStore.fetchTasks()
+  await aiStore.fetchMessages()
   // Scroll to bottom after mount to show latest messages
   scrollToBottom()
 })
