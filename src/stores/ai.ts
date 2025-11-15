@@ -78,6 +78,11 @@ export const useAiStore = defineStore('ai', () => {
    * Fetch conversation history from backend
    */
   const fetchMessages = async (): Promise<void> => {
+    // Don't overwrite messages if user is already chatting (prevents race condition)
+    if (messages.value.length > 0) {
+      return
+    }
+
     try {
       const response = await api.get('/ai/messages')
 
