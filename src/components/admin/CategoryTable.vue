@@ -140,12 +140,15 @@
                     name="edit_color"
                     type="color"
                     class="h-8 w-12 border border-gray-300 rounded cursor-pointer"
+                    @change="validateEditHexColor"
                   />
-                  <Field
-                    name="edit_color"
+                  <input
                     type="text"
-                    class="w-24 px-2 py-1 text-sm border rounded focus:ring-indigo-500 focus:border-indigo-500"
+                    v-model="editCategoryColor"
+                    placeholder="#000000"
+                    class="w-24 px-2 py-1 text-sm border rounded focus:ring-indigo-500 focus:border-indigo-500 placeholder-gray-500"
                     :class="editFormErrors.edit_color ? 'border-red-300' : 'border-gray-300'"
+                    @input="handleEditHexInput"
                   />
                 </div>
                 <ErrorMessage name="edit_color" class="text-xs text-red-600 mt-1" />
@@ -234,6 +237,7 @@ const {
   handleSubmit: handleEditSubmit,
   errors: editFormErrors,
   setValues: setEditValues,
+  setFieldValue: setEditFieldValue,
   resetForm: resetEditForm
 } = useForm({
   validationSchema: toTypedSchema(editCategorySchema),
@@ -245,6 +249,7 @@ const {
 })
 
 const newCategoryColor = ref('#6366f1')
+const editCategoryColor = ref('#6366f1')
 const isCreating = ref(false)
 
 // Hex color validation regex: #RGB, #RGBA, #RRGGBB, or #RRGGBBAA
@@ -268,6 +273,31 @@ const handleHexInput = (event: Event) => {
   if (hexColorRegex.test(value)) {
     newCategoryColor.value = value
     setFieldValue('color', value)
+    input.setCustomValidity('')
+  } else {
+    input.setCustomValidity('Invalid hex color')
+    input.reportValidity()
+  }
+}
+
+// Validate and format hex color input for edit form
+const validateEditHexColor = (event: Event) => {
+  const input = event.target as HTMLInputElement
+  const value = input.value
+
+  editCategoryColor.value = value
+  setEditFieldValue('edit_color', value)
+}
+
+// Handle text input for hex color in edit form
+const handleEditHexInput = (event: Event) => {
+  const input = event.target as HTMLInputElement
+  let value = input.value.trim()
+  value = (value.startsWith('#') ? value : '#' + value).toUpperCase()
+
+  if (hexColorRegex.test(value)) {
+    editCategoryColor.value = value
+    setEditFieldValue('edit_color', value)
     input.setCustomValidity('')
   } else {
     input.setCustomValidity('Invalid hex color')
@@ -301,6 +331,7 @@ const handleCreateCategory = handleSubmit(async (values) => {
 // Start editing
 const startEdit = (category: Category) => {
   editingId.value = category.id
+  editCategoryColor.value = category.color
   setEditValues({
     edit_name: category.name,
     edit_description: category.description || '',
@@ -311,6 +342,7 @@ const startEdit = (category: Category) => {
 // Cancel editing
 const cancelEdit = () => {
   editingId.value = null
+  editCategoryColor.value = '#6366f1'
   resetEditForm()
 }
 
