@@ -22,8 +22,8 @@
               id="name"
               name="name"
               type="text"
-              class="mt-1 appearance-none relative block w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 sm:text-sm"
-              :class="errors.name ? 'border-red-300 text-red-900 placeholder-red-300 focus:border-red-500' : 'border-gray-300 placeholder-gray-500 text-gray-900 focus:border-indigo-500'"
+              class="mt-1 appearance-none relative block w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 sm:text-sm placeholder-gray-500"
+              :class="errors.name ? 'border-red-300 text-red-900 focus:border-red-500' : 'border-gray-300 text-gray-900 focus:border-indigo-500'"
               placeholder="Enter your full name"
             />
             <ErrorMessage name="name" class="mt-1 text-sm text-red-600" />
@@ -35,8 +35,8 @@
               id="email"
               name="email"
               type="text"
-              class="mt-1 appearance-none relative block w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 sm:text-sm"
-              :class="errors.email ? 'border-red-300 text-red-900 placeholder-red-300 focus:border-red-500' : 'border-gray-300 placeholder-gray-500 text-gray-900 focus:border-indigo-500'"
+              class="mt-1 appearance-none relative block w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 sm:text-sm placeholder-gray-500"
+              :class="errors.email ? 'border-red-300 text-red-900 focus:border-red-500' : 'border-gray-300 text-gray-900 focus:border-indigo-500'"
               placeholder="Enter your email"
             />
             <ErrorMessage name="email" class="mt-1 text-sm text-red-600" />
@@ -44,27 +44,51 @@
 
           <div>
             <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
-            <Field
-              id="password"
-              name="password"
-              type="password"
-              class="mt-1 appearance-none relative block w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 sm:text-sm"
-              :class="errors.password ? 'border-red-300 text-red-900 placeholder-red-300 focus:border-red-500' : 'border-gray-300 placeholder-gray-500 text-gray-900 focus:border-indigo-500'"
-              placeholder="Enter password (min 8 characters)"
-            />
+            <div class="relative">
+              <Field
+                id="password"
+                name="password"
+                :type="showPassword ? 'text' : 'password'"
+                class="mt-1 appearance-none relative block w-full pl-3 pr-10 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 sm:text-sm placeholder-gray-500"
+                :class="errors.password ? 'border-red-300 text-red-900 focus:border-red-500' : 'border-gray-300 text-gray-900 focus:border-indigo-500'"
+                placeholder="Enter password (min 8 characters)"
+              />
+              <button
+                type="button"
+                @click="showPassword = !showPassword"
+                class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-gray-700 focus:outline-none focus:text-gray-700 z-10"
+                :class="errors.password ? 'mt-1' : 'mt-1'"
+                aria-label="Toggle password visibility"
+              >
+                <EyeIcon v-if="!showPassword" class="h-5 w-5" />
+                <EyeSlashIcon v-else class="h-5 w-5" />
+              </button>
+            </div>
             <ErrorMessage name="password" class="mt-1 text-sm text-red-600" />
           </div>
 
           <div>
             <label for="password_confirmation" class="block text-sm font-medium text-gray-700">Confirm Password</label>
+            <div class="relative">
             <Field
               id="password_confirmation"
               name="password_confirmation"
-              type="password"
-              class="mt-1 appearance-none relative block w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 sm:text-sm"
-              :class="errors.password_confirmation ? 'border-red-300 text-red-900 placeholder-red-300 focus:border-red-500' : 'border-gray-300 placeholder-gray-500 text-gray-900 focus:border-indigo-500'"
+              :type="showConfirmPassword ? 'text' : 'password'"
+              class="mt-1 appearance-none relative block w-full pl-3 pr-10 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 sm:text-sm placeholder-gray-500"
+              :class="errors.password_confirmation ? 'border-red-300 text-red-900 focus:border-red-500' : 'border-gray-300 text-gray-900 focus:border-indigo-500'"
               placeholder="Confirm your password"
-            />
+              />
+              <button
+                type="button"
+                @click="showConfirmPassword = !showConfirmPassword"
+                class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-gray-700 focus:outline-none focus:text-gray-700 z-10"
+                :class="errors.password_confirmation ? 'mt-1' : 'mt-1'"
+                aria-label="Toggle confirm password visibility"
+              >
+                <EyeIcon v-if="!showConfirmPassword" class="h-5 w-5" />
+                <EyeSlashIcon v-else class="h-5 w-5" />
+              </button>
+            </div>
             <ErrorMessage name="password_confirmation" class="mt-1 text-sm text-red-600" />
           </div>
         </div>
@@ -94,14 +118,22 @@
 </template>
 
 <script setup lang="ts">
+import { ref } from 'vue'
 import { useRouter, RouterLink } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import { registerSchema } from '../validators/auth'
 import { useForm, Field, ErrorMessage } from 'vee-validate'
 import { toTypedSchema } from '@vee-validate/zod'
+import { EyeIcon, EyeSlashIcon } from '@heroicons/vue/24/outline'
+import { useToast } from '../composables/useToast'
 
 const router = useRouter()
 const authStore = useAuthStore()
+const { success, toastError } = useToast()
+
+// Password visibility toggle states
+const showPassword = ref(false)
+const showConfirmPassword = ref(false)
 
 const { handleSubmit, errors } = useForm({
   validationSchema: toTypedSchema(registerSchema),
@@ -115,9 +147,11 @@ const handleRegister = handleSubmit(async (values) => {
       password: values.password,
       password_confirmation: values.password_confirmation,
     })
+    success('Registration successful! Welcome to AI Todo App.')
     router.push('/')
   } catch (error) {
     console.error('Registration failed:', error)
+    toastError('Registration failed. Please check your information and try again.')
   }
 })
 </script>

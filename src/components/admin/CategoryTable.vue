@@ -13,7 +13,8 @@
               name="name"
               type="text"
               placeholder="Enter category name"
-              class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-sm"
+              class="w-full px-3 py-2 border rounded-md shadow-sm focus:ring-indigo-500 text-sm placeholder-gray-500"
+              :class="formErrors.name ? 'border-red-300 text-red-900 focus:border-red-500' : 'border-gray-300 text-gray-900 focus:border-indigo-500'"
             />
             <div class="h-5">
               <ErrorMessage name="name" class="text-xs text-red-600" />
@@ -28,7 +29,8 @@
               name="description"
               type="text"
               placeholder="Enter description (optional)"
-              class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-sm"
+              class="w-full px-3 py-2 border rounded-md shadow-sm focus:ring-indigo-500 text-sm placeholder-gray-500"
+              :class="formErrors.description ? 'border-red-300 text-red-900 focus:border-red-500' : 'border-gray-300 text-gray-900 focus:border-indigo-500'"
             />
             <div class="h-5">
               <ErrorMessage name="description" class="text-xs text-red-600" />
@@ -50,7 +52,7 @@
                 type="text"
                 v-model="newCategoryColor"
                 placeholder="#000000"
-                class="flex-1 min-w-0 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-sm"
+                class="flex-1 min-w-0 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-sm placeholder-gray-500"
                 @input="handleHexInput"
               />
             </div>
@@ -106,27 +108,27 @@
           <tr v-for="category in tasksStore.categories" :key="category.id" class="hover:bg-gray-50">
             <td class="px-6 py-4 whitespace-nowrap">
               <div v-if="editingId === category.id">
-                <input
+                <Field
+                  name="edit_name"
                   type="text"
-                  v-model="editForm.name"
                   class="w-full px-2 py-1 text-sm border rounded focus:ring-indigo-500 focus:border-indigo-500"
-                  :class="editErrors.name ? 'border-red-300' : 'border-gray-300'"
+                  :class="editFormErrors.edit_name ? 'border-red-300' : 'border-gray-300'"
                 />
-                <p v-if="editErrors.name" class="text-xs text-red-600 mt-1">{{ editErrors.name }}</p>
+                <ErrorMessage name="edit_name" class="text-xs text-red-600 mt-1" />
               </div>
               <span v-else class="text-sm font-medium text-gray-900">{{ category.name }}</span>
             </td>
 
             <td class="px-6 py-4">
               <div v-if="editingId === category.id">
-                <input
+                <Field
+                  name="edit_description"
                   type="text"
-                  v-model="editForm.description"
-                  class="w-full px-2 py-1 text-sm border rounded focus:ring-indigo-500 focus:border-indigo-500"
-                  :class="editErrors.description ? 'border-red-300' : 'border-gray-300'"
+                  class="w-full px-2 py-1 text-sm border rounded focus:ring-indigo-500 focus:border-indigo-500 placeholder-gray-500"
+                  :class="editFormErrors.edit_description ? 'border-red-300' : 'border-gray-300'"
                   placeholder="Enter description"
                 />
-                <p v-if="editErrors.description" class="text-xs text-red-600 mt-1">{{ editErrors.description }}</p>
+                <ErrorMessage name="edit_description" class="text-xs text-red-600 mt-1" />
               </div>
               <span v-else class="text-sm text-gray-600">{{ category.description || '-' }}</span>
             </td>
@@ -134,19 +136,22 @@
             <td class="px-6 py-4 whitespace-nowrap">
               <div v-if="editingId === category.id">
                 <div class="flex items-center gap-2">
-                  <input
+                  <Field
+                    name="edit_color"
                     type="color"
-                    v-model="editForm.color"
                     class="h-8 w-12 border border-gray-300 rounded cursor-pointer"
+                    @change="validateEditHexColor"
                   />
                   <input
                     type="text"
-                    v-model="editForm.color"
-                    class="w-24 px-2 py-1 text-sm border rounded focus:ring-indigo-500 focus:border-indigo-500"
-                    :class="editErrors.color ? 'border-red-300' : 'border-gray-300'"
+                    v-model="editCategoryColor"
+                    placeholder="#000000"
+                    class="w-24 px-2 py-1 text-sm border rounded focus:ring-indigo-500 focus:border-indigo-500 placeholder-gray-500"
+                    :class="editFormErrors.edit_color ? 'border-red-300' : 'border-gray-300'"
+                    @input="handleEditHexInput"
                   />
                 </div>
-                <p v-if="editErrors.color" class="text-xs text-red-600 mt-1">{{ editErrors.color }}</p>
+                <ErrorMessage name="edit_color" class="text-xs text-red-600 mt-1" />
               </div>
               <div v-else class="flex items-center gap-2">
                 <div
@@ -160,7 +165,7 @@
             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
               <template v-if="editingId === category.id">
                 <button
-                  @click="handleSaveEdit(category.id)"
+                  @click="handleSaveEdit"
                   :disabled="isSaving"
                   class="text-green-600 hover:text-green-900 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
@@ -198,17 +203,27 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from 'vue'
+import { ref } from 'vue'
 import { useForm, Field, ErrorMessage } from 'vee-validate'
 import { toTypedSchema } from '@vee-validate/zod'
 import { useTasksStore } from '../../stores/tasks'
 import { categorySchema } from '../../validators/task'
 import type { Category } from '../../types/task'
+import { z } from 'zod'
+import { useToast } from '../../composables/useToast'
 
 const tasksStore = useTasksStore()
+const { success, toastError } = useToast()
+
+// Edit schema with different field names to avoid conflicts
+const editCategorySchema = z.object({
+  edit_name: z.string().min(1, 'Name is required').max(50, 'Name must be less than 50 characters'),
+  edit_description: z.string().max(255, 'Description must be less than 255 characters').optional(),
+  edit_color: z.string().regex(/^#([0-9A-F]{3}|[0-9A-F]{4}|[0-9A-F]{6}|[0-9A-F]{8})$/i, 'Invalid hex color'),
+})
 
 // New category form
-const { handleSubmit, resetForm, setFieldValue } = useForm({
+const { handleSubmit, errors: formErrors, resetForm, setFieldValue } = useForm({
   validationSchema: toTypedSchema(categorySchema),
   initialValues: {
     name: '',
@@ -217,7 +232,24 @@ const { handleSubmit, resetForm, setFieldValue } = useForm({
   },
 })
 
+// Edit category form
+const {
+  handleSubmit: handleEditSubmit,
+  errors: editFormErrors,
+  setValues: setEditValues,
+  setFieldValue: setEditFieldValue,
+  resetForm: resetEditForm
+} = useForm({
+  validationSchema: toTypedSchema(editCategorySchema),
+  initialValues: {
+    edit_name: '',
+    edit_description: '',
+    edit_color: '#6366f1',
+  },
+})
+
 const newCategoryColor = ref('#6366f1')
+const editCategoryColor = ref('#6366f1')
 const isCreating = ref(false)
 
 // Hex color validation regex: #RGB, #RGBA, #RRGGBB, or #RRGGBBAA
@@ -248,17 +280,32 @@ const handleHexInput = (event: Event) => {
   }
 }
 
+// Validate and format hex color input for edit form
+const validateEditHexColor = (event: Event) => {
+  const input = event.target as HTMLInputElement
+  const value = input.value
+
+  editCategoryColor.value = value
+  setEditFieldValue('edit_color', value)
+}
+
+// Handle text input for hex color in edit form
+const handleEditHexInput = (event: Event) => {
+  const input = event.target as HTMLInputElement
+  let value = input.value.trim()
+  value = (value.startsWith('#') ? value : '#' + value).toUpperCase()
+
+  if (hexColorRegex.test(value)) {
+    editCategoryColor.value = value
+    setEditFieldValue('edit_color', value)
+    input.setCustomValidity('')
+  } else {
+    input.setCustomValidity('Invalid hex color')
+    input.reportValidity()
+  }
+}
+
 const editingId = ref<number | null>(null)
-const editForm = reactive({
-  name: '',
-  description: '',
-  color: '',
-})
-const editErrors = reactive<Record<string, string>>({
-  name: '',
-  description: '',
-  color: '',
-})
 const isSaving = ref(false)
 const isDeleting = ref<number | null>(null)
 
@@ -270,10 +317,12 @@ const handleCreateCategory = handleSubmit(async (values) => {
       ...values,
       color: newCategoryColor.value,
     })
+    success('Category created successfully!')
     resetForm()
     newCategoryColor.value = '#6366f1'
   } catch (error) {
     console.error('Failed to create category:', error)
+    toastError('Failed to create category. Please try again.')
   } finally {
     isCreating.value = false
   }
@@ -282,75 +331,41 @@ const handleCreateCategory = handleSubmit(async (values) => {
 // Start editing
 const startEdit = (category: Category) => {
   editingId.value = category.id
-  editForm.name = category.name
-  editForm.description = category.description || ''
-  editForm.color = category.color
-  // Clear any previous errors
-  editErrors.name = ''
-  editErrors.description = ''
-  editErrors.color = ''
+  editCategoryColor.value = category.color
+  setEditValues({
+    edit_name: category.name,
+    edit_description: category.description || '',
+    edit_color: category.color,
+  })
 }
 
 // Cancel editing
 const cancelEdit = () => {
   editingId.value = null
-  editForm.name = ''
-  editForm.description = ''
-  editForm.color = ''
-  editErrors.name = ''
-  editErrors.description = ''
-  editErrors.color = ''
-}
-
-// Validate edit form
-const validateEditForm = (): boolean => {
-  // Clear previous errors
-  editErrors.name = ''
-  editErrors.description = ''
-  editErrors.color = ''
-
-  // Validate using Zod schema
-  const result = categorySchema.safeParse({
-    name: editForm.name,
-    description: editForm.description || '',
-    color: editForm.color,
-  })
-
-  if (!result.success) {
-    // Map Zod errors to editErrors
-    result.error.errors.forEach((err) => {
-      const field = err.path[0] as string
-      if (field in editErrors) {
-        editErrors[field] = err.message
-      }
-    })
-    return false
-  }
-
-  return true
+  editCategoryColor.value = '#6366f1'
+  resetEditForm()
 }
 
 // Save edit
-const handleSaveEdit = async (categoryId: number) => {
-  // Validate before saving
-  if (!validateEditForm()) {
-    return
-  }
+const handleSaveEdit = handleEditSubmit(async (values) => {
+  if (editingId.value === null) return
 
   isSaving.value = true
   try {
-    await tasksStore.updateCategory(categoryId, {
-      name: editForm.name,
-      description: editForm.description || '',
-      color: editForm.color,
+    await tasksStore.updateCategory(editingId.value, {
+      name: values.edit_name,
+      description: values.edit_description || '',
+      color: values.edit_color,
     })
+    success('Category updated successfully!')
     cancelEdit()
   } catch (error) {
     console.error('Failed to update category:', error)
+    toastError('Failed to update category. Please try again.')
   } finally {
     isSaving.value = false
   }
-}
+})
 
 // Delete category
 const handleDelete = async (categoryId: number, categoryName: string) => {
@@ -361,8 +376,10 @@ const handleDelete = async (categoryId: number, categoryName: string) => {
   isDeleting.value = categoryId
   try {
     await tasksStore.deleteCategory(categoryId)
+    success('Category deleted successfully!')
   } catch (error) {
     console.error('Failed to delete category:', error)
+    toastError('Failed to delete category. Please try again.')
   } finally {
     isDeleting.value = null
   }

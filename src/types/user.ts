@@ -6,6 +6,7 @@ export interface User {
   name: string
   roles: UserRole[]
   email_verified_at: string | null
+  is_banned: boolean
   created_at: string
   updated_at: string
 }

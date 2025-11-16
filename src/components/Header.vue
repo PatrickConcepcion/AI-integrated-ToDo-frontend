@@ -48,17 +48,52 @@
             class="text-gray-700 hover:text-indigo-600 px-3 py-2 text-sm font-medium"
             :class="{ 'text-indigo-600 border-b-2 border-indigo-600': $route.path === '/admin' }"
           >
-            Admin
+            Categories
           </RouterLink>
-          <div class="text-sm text-gray-600">
-            {{ authStore.user?.name }}
-          </div>
-          <button
-            @click="handleLogout"
-            class="text-gray-700 hover:text-red-600 px-3 py-2 text-sm font-medium"
+          <RouterLink
+            v-if="authStore.isAdmin"
+            to="/admin/users"
+            class="text-gray-700 hover:text-indigo-600 px-3 py-2 text-sm font-medium"
+            :class="{ 'text-indigo-600 border-b-2 border-indigo-600': $route.path === '/admin/users' }"
           >
-            Logout
-          </button>
+            Users
+          </RouterLink>
+          <div v-if="authStore.user" class="relative">
+            <button
+              @click="toggleUserMenu"
+              class="flex items-center text-gray-700 hover:text-indigo-600 px-3 py-2 text-sm font-medium"
+            >
+              <span class="mr-2 max-w-[150px] truncate">
+                {{ authStore.user.name }}
+              </span>
+              <svg
+                class="h-4 w-4"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+            <div
+              v-if="userMenuOpen"
+              class="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-md shadow-lg py-1 z-50"
+            >
+              <button
+                @click="goToChangePassword"
+                class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+              >
+                Change Password
+              </button>
+              <button
+                @click="handleLogout"
+                class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-red-50 hover:text-red-600"
+              >
+                Logout
+              </button>
+            </div>
+          </div>
         </div>
 
         <!-- Mobile menu button - show on sm/md -->
@@ -133,17 +168,35 @@
           @click="mobileMenuOpen = false"
           class="block text-gray-700 hover:text-indigo-600 hover:bg-gray-50 px-3 py-2 rounded-md text-base font-medium"
         >
-          Admin
+          Categories
         </RouterLink>
-        <div class="px-3 py-2 text-base text-gray-600 border-t border-gray-200">
-          {{ authStore.user?.name }}
-        </div>
-        <button
-          @click="handleLogout"
-          class="block w-full text-left text-gray-700 hover:text-red-600 hover:bg-gray-50 px-3 py-2 rounded-md text-base font-medium"
+        <RouterLink
+          v-if="authStore.isAdmin"
+          to="/admin/users"
+          @click="mobileMenuOpen = false"
+          class="block text-gray-700 hover:text-indigo-600 hover:bg-gray-50 px-3 py-2 rounded-md text-base font-medium"
         >
-          Logout
-        </button>
+          Users
+        </RouterLink>
+        <div class="px-3 py-3 text-base text-gray-600 border-t border-gray-200">
+          <div class="font-medium">
+            {{ authStore.user?.name }}
+          </div>
+          <div class="mt-2 space-y-1">
+            <button
+              @click="goToChangePassword"
+              class="block w-full text-left text-gray-700 hover:text-indigo-600 hover:bg-gray-50 px-3 py-2 rounded-md text-sm font-medium"
+            >
+              Change Password
+            </button>
+            <button
+              @click="handleLogout"
+              class="block w-full text-left text-gray-700 hover:text-red-600 hover:bg-gray-50 px-3 py-2 rounded-md text-sm font-medium"
+            >
+              Logout
+            </button>
+          </div>
+        </div>
       </div>
       </div>
     </Transition>
@@ -158,6 +211,17 @@ import { useAuthStore } from '../stores/auth'
 const router = useRouter()
 const authStore = useAuthStore()
 const mobileMenuOpen = ref(false)
+const userMenuOpen = ref(false)
+
+const toggleUserMenu = () => {
+  userMenuOpen.value = !userMenuOpen.value
+}
+
+const goToChangePassword = () => {
+  userMenuOpen.value = false
+  mobileMenuOpen.value = false
+  router.push({ name: 'ChangePassword' })
+}
 
 const handleLogout = async () => {
   try {

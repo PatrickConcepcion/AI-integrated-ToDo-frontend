@@ -1,11 +1,22 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import api from '../api/axios'
-import type { User, UserRole, LoginCredentials, RegisterData } from '../types'
+import type { User, UserRole } from '../types/user'
+import type {
+  ChangePasswordPayload,
+  ForgotPasswordPayload,
+  LoginCredentials,
+  RegisterData,
+  ResetPasswordPayload,
+} from '../types/auth'
+import { useToast } from '../composables/useToast'
 
 export const useAuthStore = defineStore('auth', () => {
+  const { success, toastError } = useToast()
+
   const user = ref<User | null>(null)
   const token = ref<string | null>(null)
+  const users = ref<User[]>([])
   const loading = ref(false)
   const error = ref<string | null>(null)
 
@@ -114,6 +125,136 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
+  // Request password reset link
+  const requestPasswordReset = async (payload: ForgotPasswordPayload): Promise<void> => {
+    loading.value = true
+    error.value = null
+
+    try {
+      await api.post('/auth/forgot-password', payload)
+      success('If an account exists for that email, a password reset link has been sent.')
+    } catch (err: unknown) {
+      console.error('Failed to send password reset link:', err)
+      const errorMessage = err instanceof Error
+        ? (err as any).response?.data?.message || 'Failed to send password reset link'
+        : 'Failed to send password reset link'
+      error.value = errorMessage
+      toastError(errorMessage)
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
+  // Reset password using token
+  const resetPassword = async (payload: ResetPasswordPayload): Promise<void> => {
+    loading.value = true
+    error.value = null
+
+    try {
+      await api.post('/auth/reset-password', payload)
+      success('Your password has been reset. You can now sign in.')
+    } catch (err: unknown) {
+      console.error('Failed to reset password:', err)
+      const errorMessage = err instanceof Error
+        ? (err as any).response?.data?.message || 'Failed to reset password'
+        : 'Failed to reset password'
+      error.value = errorMessage
+      toastError(errorMessage)
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
+  // Change password for authenticated user
+  const changePassword = async (payload: ChangePasswordPayload): Promise<void> => {
+    loading.value = true
+    error.value = null
+
+    try {
+      await api.post('/auth/change-password', payload)
+      success('Password updated successfully!')
+    } catch (err: unknown) {
+      console.error('Failed to change password:', err)
+      const errorMessage = err instanceof Error
+        ? (err as any).response?.data?.message || 'Failed to change password'
+        : 'Failed to change password'
+      error.value = errorMessage
+      toastError(errorMessage)
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
+  // Fetch all users (admin only)
+  const fetchUsers = async (): Promise<void> => {
+    loading.value = true
+    error.value = null
+
+    try {
+      const response = await api.get('/admin/users')
+      users.value = response.data.data
+    } catch (err: unknown) {
+      console.error('Failed to fetch users:', err)
+      const errorMessage = err instanceof Error
+        ? (err as any).response?.data?.message || 'Failed to fetch users'
+        : 'Failed to fetch users'
+      error.value = errorMessage
+      toastError(errorMessage)
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
+  // Ban a user (admin only)
+  const banUser = async (userId: number): Promise<void> => {
+    loading.value = true
+    error.value = null
+
+    try {
+      await api.post(`/admin/users/${userId}/ban`)
+      success('User has been banned successfully')
+      // Refresh users list
+      await fetchUsers()
+    } catch (err: unknown) {
+      console.error('Failed to ban user:', err)
+      const errorMessage = err instanceof Error
+        ? (err as any).response?.data?.message || 'Failed to ban user'
+        : 'Failed to ban user'
+      error.value = errorMessage
+      toastError(errorMessage)
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
+  // Unban a user (admin only)
+  const unbanUser = async (userId: number): Promise<void> => {
+    loading.value = true
+    error.value = null
+
+    try {
+      await api.post(`/admin/users/${userId}/unban`)
+      success('User has been unbanned successfully')
+      // Refresh users list
+      await fetchUsers()
+    } catch (err: unknown) {
+      console.error('Failed to unban user:', err)
+      const errorMessage = err instanceof Error
+        ? (err as any).response?.data?.message || 'Failed to unban user'
+        : 'Failed to unban user'
+      error.value = errorMessage
+      toastError(errorMessage)
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
   // Helper function to check if user has a specific role
   const hasRole = (role: UserRole): boolean => {
     return user.value?.roles?.includes(role) ?? false
@@ -125,6 +266,7 @@ export const useAuthStore = defineStore('auth', () => {
   return {
     user,
     token,
+    users,
     loading,
     error,
     isAuthenticated,
@@ -133,6 +275,12 @@ export const useAuthStore = defineStore('auth', () => {
     login,
     register,
     fetchUser,
+    fetchUsers,
+    banUser,
+    unbanUser,
     logout,
+    requestPasswordReset,
+    resetPassword,
+    changePassword,
   }
 })
