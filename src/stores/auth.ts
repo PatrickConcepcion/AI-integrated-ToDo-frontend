@@ -16,6 +16,7 @@ export const useAuthStore = defineStore('auth', () => {
 
   const user = ref<User | null>(null)
   const token = ref<string | null>(null)
+  const users = ref<User[]>([])
   const loading = ref(false)
   const error = ref<string | null>(null)
 
@@ -187,6 +188,73 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
+  // Fetch all users (admin only)
+  const fetchUsers = async (): Promise<void> => {
+    loading.value = true
+    error.value = null
+
+    try {
+      const response = await api.get('/admin/users')
+      users.value = response.data.data
+    } catch (err: unknown) {
+      console.error('Failed to fetch users:', err)
+      const errorMessage = err instanceof Error
+        ? (err as any).response?.data?.message || 'Failed to fetch users'
+        : 'Failed to fetch users'
+      error.value = errorMessage
+      toastError(errorMessage)
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
+  // Ban a user (admin only)
+  const banUser = async (userId: number): Promise<void> => {
+    loading.value = true
+    error.value = null
+
+    try {
+      await api.post(`/admin/users/${userId}/ban`)
+      success('User has been banned successfully')
+      // Refresh users list
+      await fetchUsers()
+    } catch (err: unknown) {
+      console.error('Failed to ban user:', err)
+      const errorMessage = err instanceof Error
+        ? (err as any).response?.data?.message || 'Failed to ban user'
+        : 'Failed to ban user'
+      error.value = errorMessage
+      toastError(errorMessage)
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
+  // Unban a user (admin only)
+  const unbanUser = async (userId: number): Promise<void> => {
+    loading.value = true
+    error.value = null
+
+    try {
+      await api.post(`/admin/users/${userId}/unban`)
+      success('User has been unbanned successfully')
+      // Refresh users list
+      await fetchUsers()
+    } catch (err: unknown) {
+      console.error('Failed to unban user:', err)
+      const errorMessage = err instanceof Error
+        ? (err as any).response?.data?.message || 'Failed to unban user'
+        : 'Failed to unban user'
+      error.value = errorMessage
+      toastError(errorMessage)
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
   // Helper function to check if user has a specific role
   const hasRole = (role: UserRole): boolean => {
     return user.value?.roles?.includes(role) ?? false
@@ -198,6 +266,7 @@ export const useAuthStore = defineStore('auth', () => {
   return {
     user,
     token,
+    users,
     loading,
     error,
     isAuthenticated,
@@ -206,6 +275,9 @@ export const useAuthStore = defineStore('auth', () => {
     login,
     register,
     fetchUser,
+    fetchUsers,
+    banUser,
+    unbanUser,
     logout,
     requestPasswordReset,
     resetPassword,
