@@ -10,7 +10,12 @@
         </p>
       </div>
 
-      <form class="mt-8 space-y-6" @submit="handleLogin" novalidate>
+      <Form
+        @submit="handleLogin"
+        :validation-schema="toTypedSchema(loginSchema)"
+        :initial-values="{ email: '', password: '' }"
+        class="mt-8 space-y-6"
+      >
         <div v-if="authStore.error" class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative">
           {{ authStore.error }}
         </div>
@@ -18,38 +23,42 @@
         <div class="space-y-4">
           <div>
             <label for="email" class="block text-sm font-medium text-gray-700">Email address</label>
-            <Field
-              id="email"
-              name="email"
-              type="text"
-              class="mt-1 appearance-none relative block w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:z-10 sm:text-sm placeholder-gray-500"
-              :class="errors.email ? 'border-red-300 text-red-900 focus:border-red-500' : 'border-gray-300 text-gray-900 focus:border-indigo-500'"
-              placeholder="Enter your email"
-            />
+            <Field name="email" v-slot="{ field, errors }">
+              <input
+                v-bind="field"
+                id="email"
+                type="text"
+                placeholder="Enter your email"
+                class="mt-1 appearance-none relative block w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:z-10 sm:text-sm placeholder-gray-500"
+                :class="errors.length > 0 ? 'border-red-300 text-red-900 focus:border-red-500' : 'border-gray-300 text-gray-900 focus:border-indigo-500'"
+              />
+            </Field>
             <ErrorMessage name="email" class="mt-1 text-sm text-red-600" />
           </div>
 
           <div>
             <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
             <div class="relative">
-              <Field
-                id="password"
-                name="password"
-                :type="showPassword ? 'text' : 'password'"
-                class="mt-1 appearance-none relative block w-full pl-3 pr-10 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:z-10 sm:text-sm placeholder-gray-500"
-                :class="errors.password ? 'border-red-300 text-red-900 focus:border-red-500' : 'border-gray-300 text-gray-900 focus:border-indigo-500'"
-                placeholder="Enter your password"
-              />
-              <button
-                type="button"
-                @click="showPassword = !showPassword"
-                class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-gray-700 focus:outline-none focus:text-gray-700 z-10"
-                :class="errors.password ? 'mt-1' : 'mt-1'"
-                aria-label="Toggle password visibility"
-              >
-                <EyeIcon v-if="!showPassword" class="h-5 w-5" />
-                <EyeSlashIcon v-else class="h-5 w-5" />
-              </button>
+              <Field name="password" v-slot="{ field, errors }">
+                <input
+                  v-bind="field"
+                  id="password"
+                  :type="showPassword ? 'text' : 'password'"
+                  placeholder="Enter your password"
+                  class="mt-1 appearance-none relative block w-full pl-3 pr-10 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:z-10 sm:text-sm placeholder-gray-500"
+                  :class="errors.length > 0 ? 'border-red-300 text-red-900 focus:border-red-500' : 'border-gray-300 text-gray-900 focus:border-indigo-500'"
+                />
+                <button
+                  type="button"
+                  @click="showPassword = !showPassword"
+                  class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-gray-700 focus:outline-none focus:text-gray-700 z-10"
+                  :class="errors.length > 0 ? 'mt-1' : 'mt-1'"
+                  aria-label="Toggle password visibility"
+                >
+                  <EyeIcon v-if="!showPassword" class="h-5 w-5" />
+                  <EyeSlashIcon v-else class="h-5 w-5" />
+                </button>
+              </Field>
             </div>
             <ErrorMessage name="password" class="mt-1 text-sm text-red-600" />
             <div class="mt-2 text-right">
@@ -79,7 +88,7 @@
             </RouterLink>
           </p>
         </div>
-      </form>
+      </Form>
     </div>
   </div>
 </template>
@@ -89,7 +98,7 @@ import { ref } from 'vue'
 import { useRouter, RouterLink } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import { loginSchema } from '../validators/auth'
-import { useForm, Field, ErrorMessage } from 'vee-validate'
+import { Form, Field, ErrorMessage, useForm } from 'vee-validate'
 import { toTypedSchema } from '@vee-validate/zod'
 import { EyeIcon, EyeSlashIcon } from '@heroicons/vue/24/outline'
 import { useToast } from '../composables/useToast'
@@ -97,15 +106,12 @@ import { useToast } from '../composables/useToast'
 const router = useRouter()
 const authStore = useAuthStore()
 const { success, toastError } = useToast()
+const { setErrors } = useForm()
 
 // Password visibility toggle state
 const showPassword = ref(false)
 
-const { handleSubmit, errors } = useForm({
-  validationSchema: toTypedSchema(loginSchema),
-})
-
-const handleLogin = handleSubmit(async (values) => {
+const handleLogin = async (values: any) => {
   try {
     await authStore.login({
       email: values.email,
@@ -113,9 +119,21 @@ const handleLogin = handleSubmit(async (values) => {
     })
     success('Login successful!')
     router.push('/')
-  } catch (error) {
+  } catch (error: any) {
     console.error('Login failed:', error)
-    toastError('Login failed. Please check your credentials.')
+
+    const validationErrors = error?.response?.data?.errors
+    if (validationErrors) {
+      const transformedErrors = Object.keys(validationErrors).reduce((acc, key) => {
+        acc[key] = Array.isArray(validationErrors[key])
+          ? validationErrors[key][0]
+          : validationErrors[key]
+        return acc
+      }, {} as Record<string, string>)
+      setErrors(transformedErrors)
+    } else {
+      toastError('Login failed. Please check your credentials.')
+    }
   }
-})
+}
 </script>
