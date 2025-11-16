@@ -10,7 +10,12 @@
         </p>
       </div>
 
-      <form class="mt-8 space-y-6" @submit="handleForgotPassword" novalidate>
+      <Form
+        @submit="handleForgotPassword"
+        :validation-schema="toTypedSchema(forgotPasswordSchema)"
+        :initial-values="{ email: '' }"
+        class="mt-8 space-y-6"
+      >
         <div v-if="authStore.error" class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative">
           {{ authStore.error }}
         </div>
@@ -22,14 +27,16 @@
         <div class="space-y-4">
           <div>
             <label for="email" class="block text-sm font-medium text-gray-700">Email address</label>
-            <Field
-              id="email"
-              name="email"
-              type="text"
-              class="mt-1 appearance-none relative block w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:z-10 sm:text-sm placeholder-gray-500"
-              :class="errors.email ? 'border-red-300 text-red-900 focus:border-red-500' : 'border-gray-300 text-gray-900 focus:border-indigo-500'"
-              placeholder="Enter your email"
-            />
+            <Field name="email" v-slot="{ field, errors }">
+              <input
+                v-bind="field"
+                id="email"
+                type="email"
+                placeholder="Enter your email"
+                class="mt-1 appearance-none relative block w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:z-10 sm:text-sm placeholder-gray-500"
+                :class="errors.length > 0 ? 'border-red-300 text-red-900 focus:border-red-500' : 'border-gray-300 text-gray-900 focus:border-indigo-500'"
+              />
+            </Field>
             <ErrorMessage name="email" class="mt-1 text-sm text-red-600" />
           </div>
         </div>
@@ -53,7 +60,7 @@
             </RouterLink>
           </p>
         </div>
-      </form>
+      </Form>
     </div>
   </div>
 </template>
@@ -63,24 +70,35 @@ import { ref } from 'vue'
 import { RouterLink } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import { forgotPasswordSchema } from '../validators/auth'
-import { useForm, Field, ErrorMessage } from 'vee-validate'
+import { Form, Field, ErrorMessage } from 'vee-validate'
 import { toTypedSchema } from '@vee-validate/zod'
+import { useToast } from '../composables/useToast'
 
 const authStore = useAuthStore()
+const { toastError } = useToast()
 const submitted = ref(false)
 
-const { handleSubmit, errors } = useForm({
-  validationSchema: toTypedSchema(forgotPasswordSchema),
-})
-
-const handleForgotPassword = handleSubmit(async (values) => {
+const handleForgotPassword = async (values: any, actions: any) => {
   try {
     await authStore.requestPasswordReset({
       email: values.email,
     })
     submitted.value = true
-  } catch (error) {
+  } catch (error: any) {
     console.error('Forgot password request failed:', error)
+
+    const validationErrors = error?.response?.data?.errors
+    if (validationErrors) {
+      const transformedErrors = Object.keys(validationErrors).reduce((acc, key) => {
+        acc[key] = Array.isArray(validationErrors[key])
+          ? validationErrors[key][0]
+          : validationErrors[key]
+        return acc
+      }, {} as Record<string, string>)
+      actions.setErrors(transformedErrors)
+    } else {
+      toastError('Failed to send reset link. Please try again.')
+    }
   }
-})
+}
 </script>

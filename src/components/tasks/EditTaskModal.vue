@@ -18,29 +18,37 @@
       >
         <div v-if="show" class="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
           <h3 class="text-lg font-medium text-gray-900 mb-4">Edit Task</h3>
-          <form @submit.prevent="handleEditTask" class="space-y-4" novalidate>
+          <Form
+            @submit="handleEditTask"
+            :validation-schema="toTypedSchema(taskSchema)"
+            :initial-values="formInitialValues"
+            class="space-y-4"
+          >
             <div>
               <label class="block text-sm font-medium text-gray-700">Title</label>
-            <Field
-              name="title"
-              type="text"
-              class="mt-1 block w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 placeholder-gray-500"
-              :class="formErrors.title ? 'border-red-300 text-red-900 focus:border-red-500' : 'border-gray-300 text-gray-900 focus:border-indigo-500'"
-              placeholder="Enter task title"
-            />
+              <Field name="title" v-slot="{ field, errors }">
+                <input
+                  v-bind="field"
+                  type="text"
+                  placeholder="Enter task title"
+                  class="mt-1 block w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 placeholder-gray-500"
+                  :class="errors.length > 0 ? 'border-red-300 text-red-900 focus:border-red-500' : 'border-gray-300 text-gray-900 focus:border-indigo-500'"
+                />
+              </Field>
               <ErrorMessage name="title" class="mt-1 text-sm text-red-600" />
             </div>
 
             <div>
               <label class="block text-sm font-medium text-gray-700">Description</label>
-              <Field
-                name="description"
-                as="textarea"
-                rows="3"
-                class="mt-1 block w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 placeholder-gray-500"
-                :class="formErrors.description ? 'border-red-300 text-red-900 focus:border-red-500' : 'border-gray-300 text-gray-900 focus:border-indigo-500'"
-                placeholder="Enter task description (optional)"
-              />
+              <Field name="description" v-slot="{ field, errors }">
+                <textarea
+                  v-bind="field"
+                  rows="3"
+                  placeholder="Enter task description (optional)"
+                  class="mt-1 block w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 placeholder-gray-500"
+                  :class="errors.length > 0 ? 'border-red-300 text-red-900 focus:border-red-500' : 'border-gray-300 text-gray-900 focus:border-indigo-500'"
+                />
+              </Field>
               <ErrorMessage name="description" class="mt-1 text-sm text-red-600" />
             </div>
 
@@ -60,27 +68,30 @@
 
             <div>
               <label class="block text-sm font-medium text-gray-700">Priority</label>
-              <Field
-                name="priority"
-                as="select"
-                class="mt-1 block w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500"
-                :class="formErrors.priority ? 'border-red-300 text-red-900 focus:border-red-500' : 'border-gray-300 text-gray-900 focus:border-indigo-500'"
-              >
-                <option value="low">Low</option>
-                <option value="medium">Medium</option>
-                <option value="high">High</option>
+              <Field name="priority" v-slot="{ field, errors }">
+                <select
+                  v-bind="field"
+                  class="mt-1 block w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500"
+                  :class="errors.length > 0 ? 'border-red-300 text-red-900 focus:border-red-500' : 'border-gray-300 text-gray-900 focus:border-indigo-500'"
+                >
+                  <option value="low">Low</option>
+                  <option value="medium">Medium</option>
+                  <option value="high">High</option>
+                </select>
               </Field>
               <ErrorMessage name="priority" class="mt-1 text-sm text-red-600" />
             </div>
 
             <div>
               <label class="block text-sm font-medium text-gray-700">Due Date</label>
-              <Field
-                name="due_date"
-                type="date"
-                class="mt-1 block w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500"
-                :class="formErrors.due_date ? 'border-red-300 text-red-900 focus:border-red-500' : 'border-gray-300 text-gray-900 focus:border-indigo-500'"
-              />
+              <Field name="due_date" v-slot="{ field, errors }">
+                <input
+                  v-bind="field"
+                  type="date"
+                  class="mt-1 block w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500"
+                  :class="errors.length > 0 ? 'border-red-300 text-red-900 focus:border-red-500' : 'border-gray-300 text-gray-900 focus:border-indigo-500'"
+                />
+              </Field>
               <ErrorMessage name="due_date" class="mt-1 text-sm text-red-600" />
             </div>
 
@@ -100,7 +111,7 @@
                 {{ isSubmitting ? 'Updating...' : 'Update Task' }}
               </button>
             </div>
-          </form>
+          </Form>
         </div>
       </Transition>
     </div>
@@ -108,8 +119,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue'
-import { useForm, Field, ErrorMessage } from 'vee-validate'
+import { ref, computed } from 'vue'
+import { Form, Field, ErrorMessage } from 'vee-validate'
 import { toTypedSchema } from '@vee-validate/zod'
 import { useTasksStore } from '../../stores/tasks'
 import { taskSchema } from '../../validators/task'
@@ -133,32 +144,28 @@ const emit = defineEmits<{
 
 const isSubmitting = ref(false)
 
-// vee-validate form setup
-const { handleSubmit, errors: formErrors, setValues } = useForm({
-  validationSchema: toTypedSchema(taskSchema),
-  initialValues: {
-    title: '',
-    description: '',
-    category_id: '',
-    priority: 'medium',
-    due_date: '',
-  },
+// Compute initial values reactively from task prop
+const formInitialValues = computed(() => {
+  if (!props.task) {
+    return {
+      title: '',
+      description: '',
+      category_id: '',
+      priority: 'medium',
+      due_date: '',
+    }
+  }
+
+  return {
+    title: props.task.title,
+    description: props.task.description || '',
+    category_id: props.task.category_id ? String(props.task.category_id) : '',
+    priority: props.task.priority || 'medium',
+    due_date: props.task.due_date ? props.task.due_date.split('T')[0] : '',
+  }
 })
 
-// Watch for task prop changes to populate form
-watch(() => props.task, (newTask) => {
-  if (newTask) {
-    setValues({
-      title: newTask.title,
-      description: newTask.description || '',
-      category_id: newTask.category_id ? String(newTask.category_id) : '',
-      priority: newTask.priority || 'medium',
-      due_date: newTask.due_date ? newTask.due_date.split('T')[0] : '',
-    })
-  }
-}, { immediate: true })
-
-const handleEditTask = handleSubmit(async (values) => {
+const handleEditTask = async (values: any, actions: any) => {
   if (!props.task) {
     return
   }
@@ -169,11 +176,23 @@ const handleEditTask = handleSubmit(async (values) => {
     success('Task updated successfully!')
     emit('updated')
     emit('update:show', false)
-  } catch (error) {
+  } catch (error: any) {
     console.error('Failed to update task:', error)
-    toastError('Failed to update task. Please try again.')
+
+    const validationErrors = error?.response?.data?.errors
+    if (validationErrors) {
+      const transformedErrors = Object.keys(validationErrors).reduce((acc, key) => {
+        acc[key] = Array.isArray(validationErrors[key])
+          ? validationErrors[key][0]
+          : validationErrors[key]
+        return acc
+      }, {} as Record<string, string>)
+      actions.setErrors(transformedErrors)
+    } else {
+      toastError('Failed to update task. Please try again.')
+    }
   } finally {
     isSubmitting.value = false
   }
-})
+}
 </script>

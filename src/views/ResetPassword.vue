@@ -23,7 +23,13 @@
         </p>
       </div>
 
-      <form v-else class="mt-8 space-y-6" @submit="handleResetPassword" novalidate>
+      <Form
+        v-else
+        @submit="handleResetPassword"
+        :validation-schema="toTypedSchema(resetPasswordSchema)"
+        :initial-values="{ password: '', password_confirmation: '' }"
+        class="mt-8 space-y-6"
+      >
         <div v-if="authStore.error" class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative">
           {{ authStore.error }}
         </div>
@@ -42,27 +48,31 @@
 
           <div>
             <label for="password" class="block text-sm font-medium text-gray-700">New password</label>
-            <Field
-              id="password"
-              name="password"
-              type="password"
-              class="mt-1 appearance-none relative block w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:z-10 sm:text-sm placeholder-gray-500"
-              :class="errors.password ? 'border-red-300 text-red-900 focus:border-red-500' : 'border-gray-300 text-gray-900 focus:border-indigo-500'"
-              placeholder="Enter your new password"
-            />
+            <Field name="password" v-slot="{ field, errors }">
+              <input
+                v-bind="field"
+                id="password"
+                type="password"
+                placeholder="Enter your new password"
+                class="mt-1 appearance-none relative block w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:z-10 sm:text-sm placeholder-gray-500"
+                :class="errors.length > 0 ? 'border-red-300 text-red-900 focus:border-red-500' : 'border-gray-300 text-gray-900 focus:border-indigo-500'"
+              />
+            </Field>
             <ErrorMessage name="password" class="mt-1 text-sm text-red-600" />
           </div>
 
           <div>
             <label for="password_confirmation" class="block text-sm font-medium text-gray-700">Confirm new password</label>
-            <Field
-              id="password_confirmation"
-              name="password_confirmation"
-              type="password"
-              class="mt-1 appearance-none relative block w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:z-10 sm:text-sm placeholder-gray-500"
-              :class="errors.password_confirmation ? 'border-red-300 text-red-900 focus:border-red-500' : 'border-gray-300 text-gray-900 focus:border-indigo-500'"
-              placeholder="Confirm your new password"
-            />
+            <Field name="password_confirmation" v-slot="{ field, errors }">
+              <input
+                v-bind="field"
+                id="password_confirmation"
+                type="password"
+                placeholder="Confirm your new password"
+                class="mt-1 appearance-none relative block w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:z-10 sm:text-sm placeholder-gray-500"
+                :class="errors.length > 0 ? 'border-red-300 text-red-900 focus:border-red-500' : 'border-gray-300 text-gray-900 focus:border-indigo-500'"
+              />
+            </Field>
             <ErrorMessage name="password_confirmation" class="mt-1 text-sm text-red-600" />
           </div>
         </div>
@@ -86,7 +96,7 @@
             </RouterLink>
           </p>
         </div>
-      </form>
+      </Form>
     </div>
   </div>
 </template>
@@ -96,23 +106,21 @@ import { computed, ref } from 'vue'
 import { useRoute, useRouter, RouterLink } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import { resetPasswordSchema } from '../validators/auth'
-import { useForm, Field, ErrorMessage } from 'vee-validate'
+import { Form, Field, ErrorMessage } from 'vee-validate'
 import { toTypedSchema } from '@vee-validate/zod'
+import { useToast } from '../composables/useToast'
 
 const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
+const { success, toastError } = useToast()
 const submitted = ref(false)
 
 const emailFromQuery = computed(() => (route.query.email as string) || '')
 const tokenFromQuery = computed(() => (route.query.token as string) || '')
 const hasValidParams = computed(() => !!emailFromQuery.value && !!tokenFromQuery.value)
 
-const { handleSubmit, errors, resetForm } = useForm({
-  validationSchema: toTypedSchema(resetPasswordSchema),
-})
-
-const handleResetPassword = handleSubmit(async (values) => {
+const handleResetPassword = async (values: any, actions: any) => {
   if (!hasValidParams.value) {
     return
   }
@@ -125,10 +133,24 @@ const handleResetPassword = handleSubmit(async (values) => {
       password_confirmation: values.password_confirmation,
     })
     submitted.value = true
-    resetForm()
+    success('Password reset successfully!')
+    actions.resetForm()
     router.push({ name: 'Login' })
-  } catch (error) {
+  } catch (error: any) {
     console.error('Password reset failed:', error)
+
+    const validationErrors = error?.response?.data?.errors
+    if (validationErrors) {
+      const transformedErrors = Object.keys(validationErrors).reduce((acc, key) => {
+        acc[key] = Array.isArray(validationErrors[key])
+          ? validationErrors[key][0]
+          : validationErrors[key]
+        return acc
+      }, {} as Record<string, string>)
+      actions.setErrors(transformedErrors)
+    } else {
+      toastError('Password reset failed. Please try again.')
+    }
   }
-})
+}
 </script>
