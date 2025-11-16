@@ -8,8 +8,8 @@
           <Field
             name="title"
             type="text"
-            class="mt-1 block w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500"
-            :class="formErrors.title ? 'border-red-300 text-red-900 placeholder-red-300 focus:border-red-500' : 'border-gray-300 text-gray-900 focus:border-indigo-500'"
+            class="mt-1 block w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 placeholder-gray-500"
+            :class="formErrors.title ? 'border-red-300 text-red-900 focus:border-red-500' : 'border-gray-300 text-gray-900 focus:border-indigo-500'"
             placeholder="Enter task title"
           />
           <ErrorMessage name="title" class="mt-1 text-sm text-red-600" />
@@ -21,8 +21,8 @@
             name="description"
             as="textarea"
             rows="3"
-            class="mt-1 block w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500"
-            :class="formErrors.description ? 'border-red-300 text-red-900 placeholder-red-300 focus:border-red-500' : 'border-gray-300 text-gray-900 focus:border-indigo-500'"
+            class="mt-1 block w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 placeholder-gray-500"
+            :class="formErrors.description ? 'border-red-300 text-red-900 focus:border-red-500' : 'border-gray-300 text-gray-900 focus:border-indigo-500'"
             placeholder="Enter task description (optional)"
           />
           <ErrorMessage name="description" class="mt-1 text-sm text-red-600" />
@@ -95,8 +95,10 @@ import { useForm, Field, ErrorMessage } from 'vee-validate'
 import { toTypedSchema } from '@vee-validate/zod'
 import { useTasksStore } from '../../stores/tasks'
 import { taskSchema } from '../../validators/task'
+import { useToast } from '../../composables/useToast'
 
 const tasksStore = useTasksStore()
+const { success, toastError } = useToast()
 
 interface Props {
   show: boolean
@@ -127,11 +129,13 @@ const handleCreateTask = handleSubmit(async (values) => {
   isSubmitting.value = true
   try {
     await tasksStore.createTask(values)
+    success('Task created successfully!')
     emit('created')
     emit('update:show', false)
     resetForm()
   } catch (error) {
     console.error('Failed to create task:', error)
+    toastError('Failed to create task. Please try again.')
   } finally {
     isSubmitting.value = false
   }

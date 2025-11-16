@@ -21,13 +21,13 @@
           <form @submit.prevent="handleEditTask" class="space-y-4" novalidate>
             <div>
               <label class="block text-sm font-medium text-gray-700">Title</label>
-              <Field
-                name="title"
-                type="text"
-                class="mt-1 block w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500"
-                :class="formErrors.title ? 'border-red-300 text-red-900 placeholder-red-300 focus:border-red-500' : 'border-gray-300 text-gray-900 focus:border-indigo-500'"
-                placeholder="Enter task title"
-              />
+            <Field
+              name="title"
+              type="text"
+              class="mt-1 block w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 placeholder-gray-500"
+              :class="formErrors.title ? 'border-red-300 text-red-900 focus:border-red-500' : 'border-gray-300 text-gray-900 focus:border-indigo-500'"
+              placeholder="Enter task title"
+            />
               <ErrorMessage name="title" class="mt-1 text-sm text-red-600" />
             </div>
 
@@ -37,8 +37,8 @@
                 name="description"
                 as="textarea"
                 rows="3"
-                class="mt-1 block w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500"
-                :class="formErrors.description ? 'border-red-300 text-red-900 placeholder-red-300 focus:border-red-500' : 'border-gray-300 text-gray-900 focus:border-indigo-500'"
+                class="mt-1 block w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 placeholder-gray-500"
+                :class="formErrors.description ? 'border-red-300 text-red-900 focus:border-red-500' : 'border-gray-300 text-gray-900 focus:border-indigo-500'"
                 placeholder="Enter task description (optional)"
               />
               <ErrorMessage name="description" class="mt-1 text-sm text-red-600" />
@@ -114,8 +114,10 @@ import { toTypedSchema } from '@vee-validate/zod'
 import { useTasksStore } from '../../stores/tasks'
 import { taskSchema } from '../../validators/task'
 import type { Task } from '../../types/task'
+import { useToast } from '../../composables/useToast'
 
 const tasksStore = useTasksStore()
+const { success, toastError } = useToast()
 
 interface Props {
   show: boolean
@@ -164,10 +166,12 @@ const handleEditTask = handleSubmit(async (values) => {
   isSubmitting.value = true
   try {
     await tasksStore.updateTask(props.task.id, values)
+    success('Task updated successfully!')
     emit('updated')
     emit('update:show', false)
   } catch (error) {
     console.error('Failed to update task:', error)
+    toastError('Failed to update task. Please try again.')
   } finally {
     isSubmitting.value = false
   }

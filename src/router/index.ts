@@ -9,6 +9,18 @@ const routes: RouteRecordRaw[] = [
     meta: { guest: true },
   },
   {
+    path: '/forgot-password',
+    name: 'ForgotPassword',
+    component: () => import('../views/ForgotPassword.vue'),
+    meta: { guest: true },
+  },
+  {
+    path: '/reset-password',
+    name: 'ResetPassword',
+    component: () => import('../views/ResetPassword.vue'),
+    meta: { guest: true },
+  },
+  {
     path: '/register',
     name: 'Register',
     component: () => import('../views/Register.vue'),
@@ -18,6 +30,12 @@ const routes: RouteRecordRaw[] = [
     path: '/',
     name: 'Dashboard',
     component: () => import('../views/Dashboard.vue'),
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/change-password',
+    name: 'ChangePassword',
+    component: () => import('../views/ChangePassword.vue'),
     meta: { requiresAuth: true },
   },
   {
