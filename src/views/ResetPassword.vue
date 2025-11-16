@@ -106,7 +106,7 @@ import { computed, ref } from 'vue'
 import { useRoute, useRouter, RouterLink } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import { resetPasswordSchema } from '../validators/auth'
-import { Form, Field, ErrorMessage, useForm } from 'vee-validate'
+import { Form, Field, ErrorMessage } from 'vee-validate'
 import { toTypedSchema } from '@vee-validate/zod'
 import { useToast } from '../composables/useToast'
 
@@ -114,14 +114,13 @@ const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
 const { success, toastError } = useToast()
-const { setErrors, resetForm } = useForm()
 const submitted = ref(false)
 
 const emailFromQuery = computed(() => (route.query.email as string) || '')
 const tokenFromQuery = computed(() => (route.query.token as string) || '')
 const hasValidParams = computed(() => !!emailFromQuery.value && !!tokenFromQuery.value)
 
-const handleResetPassword = async (values: any) => {
+const handleResetPassword = async (values: any, actions: any) => {
   if (!hasValidParams.value) {
     return
   }
@@ -135,7 +134,7 @@ const handleResetPassword = async (values: any) => {
     })
     submitted.value = true
     success('Password reset successfully!')
-    resetForm()
+    actions.resetForm()
     router.push({ name: 'Login' })
   } catch (error: any) {
     console.error('Password reset failed:', error)
@@ -148,7 +147,7 @@ const handleResetPassword = async (values: any) => {
           : validationErrors[key]
         return acc
       }, {} as Record<string, string>)
-      setErrors(transformedErrors)
+      actions.setErrors(transformedErrors)
     } else {
       toastError('Password reset failed. Please try again.')
     }

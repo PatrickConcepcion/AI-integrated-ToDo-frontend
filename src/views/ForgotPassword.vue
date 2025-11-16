@@ -70,16 +70,15 @@ import { ref } from 'vue'
 import { RouterLink } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import { forgotPasswordSchema } from '../validators/auth'
-import { Form, Field, ErrorMessage, useForm } from 'vee-validate'
+import { Form, Field, ErrorMessage } from 'vee-validate'
 import { toTypedSchema } from '@vee-validate/zod'
 import { useToast } from '../composables/useToast'
 
 const authStore = useAuthStore()
 const { toastError } = useToast()
-const { setErrors } = useForm()
 const submitted = ref(false)
 
-const handleForgotPassword = async (values: any) => {
+const handleForgotPassword = async (values: any, actions: any) => {
   try {
     await authStore.requestPasswordReset({
       email: values.email,
@@ -96,7 +95,7 @@ const handleForgotPassword = async (values: any) => {
           : validationErrors[key]
         return acc
       }, {} as Record<string, string>)
-      setErrors(transformedErrors)
+      actions.setErrors(transformedErrors)
     } else {
       toastError('Failed to send reset link. Please try again.')
     }

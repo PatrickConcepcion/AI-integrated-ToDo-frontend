@@ -120,7 +120,7 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { Form, Field, ErrorMessage, useForm } from 'vee-validate'
+import { Form, Field, ErrorMessage } from 'vee-validate'
 import { toTypedSchema } from '@vee-validate/zod'
 import { useTasksStore } from '../../stores/tasks'
 import { taskSchema } from '../../validators/task'
@@ -141,8 +141,6 @@ const emit = defineEmits<{
   'update:show': [value: boolean]
   'updated': []
 }>()
-
-const { setErrors } = useForm()
 
 const isSubmitting = ref(false)
 
@@ -167,7 +165,7 @@ const formInitialValues = computed(() => {
   }
 })
 
-const handleEditTask = async (values: any) => {
+const handleEditTask = async (values: any, actions: any) => {
   if (!props.task) {
     return
   }
@@ -189,7 +187,7 @@ const handleEditTask = async (values: any) => {
           : validationErrors[key]
         return acc
       }, {} as Record<string, string>)
-      setErrors(transformedErrors)
+      actions.setErrors(transformedErrors)
     } else {
       toastError('Failed to update task. Please try again.')
     }

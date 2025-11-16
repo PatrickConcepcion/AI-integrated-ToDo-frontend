@@ -135,7 +135,7 @@ import { ref } from 'vue'
 import { useRouter, RouterLink } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import { registerSchema } from '../validators/auth'
-import { Form, Field, ErrorMessage, useForm } from 'vee-validate'
+import { Form, Field, ErrorMessage } from 'vee-validate'
 import { toTypedSchema } from '@vee-validate/zod'
 import { EyeIcon, EyeSlashIcon } from '@heroicons/vue/24/outline'
 import { useToast } from '../composables/useToast'
@@ -143,13 +143,12 @@ import { useToast } from '../composables/useToast'
 const router = useRouter()
 const authStore = useAuthStore()
 const { success, toastError } = useToast()
-const { setErrors } = useForm()
 
 // Password visibility toggle states
 const showPassword = ref(false)
 const showConfirmPassword = ref(false)
 
-const handleRegister = async (values: any) => {
+const handleRegister = async (values: any, actions: any) => {
   try {
     await authStore.register({
       name: values.name,
@@ -170,7 +169,7 @@ const handleRegister = async (values: any) => {
           : validationErrors[key]
         return acc
       }, {} as Record<string, string>)
-      setErrors(transformedErrors)
+      actions.setErrors(transformedErrors)
     } else {
       toastError('Registration failed. Please check your information and try again.')
     }

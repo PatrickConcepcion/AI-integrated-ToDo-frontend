@@ -8,6 +8,7 @@
         :validation-schema="toTypedSchema(categorySchema)"
         :initial-values="{ name: '', description: '', color: '#6366f1' }"
         class="space-y-3"
+        v-slot="{ setFieldValue }"
       >
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 items-start">
           <!-- Name Input -->
@@ -57,7 +58,7 @@
                   type="color"
                   class="h-10 w-16 border rounded cursor-pointer flex-shrink-0"
                   :class="errors.length > 0 ? 'border-red-300' : 'border-gray-300'"
-                  @change="validateHexColor"
+                  @change="(event) => validateHexColor(event, setFieldValue)"
                 />
                 <input
                   type="text"
@@ -65,7 +66,7 @@
                   placeholder="#000000"
                   class="flex-1 min-w-0 px-3 py-2 border rounded-md shadow-sm focus:ring-indigo-500 text-sm placeholder-gray-500"
                   :class="errors.length > 0 ? 'border-red-300 text-red-900 focus:border-red-500' : 'border-gray-300 focus:border-indigo-500'"
-                  @input="handleHexInput"
+                  @input="(event) => handleHexInput(event, setFieldValue)"
                 />
               </div>
             </Field>
@@ -125,6 +126,7 @@
                   @submit="handleSaveEdit"
                   :validation-schema="toTypedSchema(editCategorySchema)"
                   :initial-values="{ edit_name: category.name, edit_description: category.description || '', edit_color: category.color }"
+                  v-slot="{ setFieldValue }"
                 >
                   <table class="min-w-full">
                     <tbody>
@@ -167,7 +169,7 @@
                                   type="color"
                                   class="h-8 w-12 border rounded cursor-pointer"
                                   :class="errors.length > 0 ? 'border-red-300' : 'border-gray-300'"
-                                  @change="validateEditHexColor"
+                                  @change="(event) => validateEditHexColor(event, setFieldValue)"
                                 />
                                 <input
                                   type="text"
@@ -175,7 +177,7 @@
                                   placeholder="#000000"
                                   class="w-24 px-2 py-1 text-sm border rounded focus:ring-indigo-500 focus:border-indigo-500 placeholder-gray-500"
                                   :class="errors.length > 0 ? 'border-red-300 text-red-900 focus:border-red-500' : 'border-gray-300 focus:border-indigo-500'"
-                                  @input="handleEditHexInput"
+                                  @input="(event) => handleEditHexInput(event, setFieldValue)"
                                 />
                               </div>
                             </Field>
@@ -249,7 +251,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import { Form, Field, ErrorMessage, useForm } from 'vee-validate'
+import { Form, Field, ErrorMessage } from 'vee-validate'
 import { toTypedSchema } from '@vee-validate/zod'
 import { useTasksStore } from '../../stores/tasks'
 import { categorySchema } from '../../validators/task'
@@ -259,10 +261,6 @@ import { useToast } from '../../composables/useToast'
 
 const tasksStore = useTasksStore()
 const { success, toastError } = useToast()
-
-// Form instances for programmatic field access
-const { setFieldValue: setCreateFieldValue } = useForm()
-const { setFieldValue: setEditFieldValue } = useForm()
 
 // Edit schema with different field names to avoid conflicts
 const editCategorySchema = z.object({
@@ -278,24 +276,26 @@ const isCreating = ref(false)
 // Hex color validation regex: #RGB, #RGBA, #RRGGBB, or #RRGGBBAA
 const hexColorRegex = /^#([0-9A-F]{3}|[0-9A-F]{4}|[0-9A-F]{6}|[0-9A-F]{8})$/
 
-// Validate and format hex color input
-const validateHexColor = (event: Event) => {
+type SetFieldValueFn = (field: string, value: unknown) => void
+
+// Validate and format hex color input for create form
+const validateHexColor = (event: Event, setFieldValue: SetFieldValueFn) => {
   const input = event.target as HTMLInputElement
   const value = input.value
 
   newCategoryColor.value = value
-  setCreateFieldValue('color', value)
+  setFieldValue('color', value)
 }
 
-// Handle text input for hex color
-const handleHexInput = (event: Event) => {
+// Handle text input for hex color (create form)
+const handleHexInput = (event: Event, setFieldValue: SetFieldValueFn) => {
   const input = event.target as HTMLInputElement
   let value = input.value.trim()
   value = (value.startsWith('#') ? value : '#' + value).toUpperCase()
 
   if (hexColorRegex.test(value)) {
     newCategoryColor.value = value
-    setCreateFieldValue('color', value)
+    setFieldValue('color', value)
     input.setCustomValidity('')
   } else {
     input.setCustomValidity('Invalid hex color')
@@ -304,22 +304,22 @@ const handleHexInput = (event: Event) => {
 }
 
 // Validate and format hex color input for edit form
-const validateEditHexColor = (event: Event) => {
+const validateEditHexColor = (event: Event, setFieldValue: SetFieldValueFn) => {
   const input = event.target as HTMLInputElement
   const value = input.value
   editCategoryColor.value = value
-  setEditFieldValue('edit_color', value)
+  setFieldValue('edit_color', value)
 }
 
 // Handle text input for hex color in edit form
-const handleEditHexInput = (event: Event) => {
+const handleEditHexInput = (event: Event, setFieldValue: SetFieldValueFn) => {
   const input = event.target as HTMLInputElement
   let value = input.value.trim()
   value = (value.startsWith('#') ? value : '#' + value).toUpperCase()
 
   if (hexColorRegex.test(value)) {
     editCategoryColor.value = value
-    setEditFieldValue('edit_color', value)
+    setFieldValue('edit_color', value)
     input.setCustomValidity('')
   } else {
     input.setCustomValidity('Invalid hex color')

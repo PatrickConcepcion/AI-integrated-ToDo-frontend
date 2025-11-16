@@ -102,7 +102,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import { Form, Field, ErrorMessage, useForm } from 'vee-validate'
+import { Form, Field, ErrorMessage } from 'vee-validate'
 import { toTypedSchema } from '@vee-validate/zod'
 import { useTasksStore } from '../../stores/tasks'
 import { taskSchema } from '../../validators/task'
@@ -122,18 +122,16 @@ const emit = defineEmits<{
   'created': []
 }>()
 
-const { setErrors, resetForm } = useForm()
-
 const isSubmitting = ref(false)
 
-const handleCreateTask = async (values: any) => {
+const handleCreateTask = async (values: any, actions: any) => {
   isSubmitting.value = true
   try {
     await tasksStore.createTask(values)
     success('Task created successfully!')
     emit('created')
     emit('update:show', false)
-    resetForm()
+    actions.resetForm()
   } catch (error: any) {
     console.error('Failed to create task:', error)
 
@@ -145,7 +143,7 @@ const handleCreateTask = async (values: any) => {
           : validationErrors[key]
         return acc
       }, {} as Record<string, string>)
-      setErrors(transformedErrors)
+      actions.setErrors(transformedErrors)
     } else {
       toastError('Failed to create task. Please try again.')
     }

@@ -98,7 +98,7 @@ import { ref } from 'vue'
 import { useRouter, RouterLink } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import { loginSchema } from '../validators/auth'
-import { Form, Field, ErrorMessage, useForm } from 'vee-validate'
+import { Form, Field, ErrorMessage } from 'vee-validate'
 import { toTypedSchema } from '@vee-validate/zod'
 import { EyeIcon, EyeSlashIcon } from '@heroicons/vue/24/outline'
 import { useToast } from '../composables/useToast'
@@ -106,12 +106,11 @@ import { useToast } from '../composables/useToast'
 const router = useRouter()
 const authStore = useAuthStore()
 const { success, toastError } = useToast()
-const { setErrors } = useForm()
 
 // Password visibility toggle state
 const showPassword = ref(false)
 
-const handleLogin = async (values: any) => {
+const handleLogin = async (values: any, actions: any) => {
   try {
     await authStore.login({
       email: values.email,
@@ -130,7 +129,7 @@ const handleLogin = async (values: any) => {
           : validationErrors[key]
         return acc
       }, {} as Record<string, string>)
-      setErrors(transformedErrors)
+      actions.setErrors(transformedErrors)
     } else {
       toastError('Login failed. Please check your credentials.')
     }
