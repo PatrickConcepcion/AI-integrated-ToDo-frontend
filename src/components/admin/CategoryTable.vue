@@ -246,11 +246,22 @@
         </tbody>
       </table>
     </div>
+
+    <!-- Confirmation Modal -->
+    <ConfirmationModal
+      v-model="confirmationState.open"
+      :action-title="confirmationState.actionTitle"
+      :message="confirmationState.message"
+      :confirm-label="confirmationState.confirmLabel"
+      cancel-label="Cancel"
+      :loading="confirmationState.loading"
+      @confirm="confirmDelete"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, reactive } from 'vue'
 import { Form, Field, ErrorMessage } from 'vee-validate'
 import { toTypedSchema } from '@vee-validate/zod'
 import { useTasksStore } from '../../stores/tasks'
@@ -258,6 +269,7 @@ import { categorySchema } from '../../validators/task'
 import type { Category } from '../../types/task'
 import { z } from 'zod'
 import { useToast } from '../../composables/useToast'
+import ConfirmationModal from '../modals/ConfirmationModal.vue'
 
 const tasksStore = useTasksStore()
 const { success, toastError } = useToast()
@@ -330,6 +342,18 @@ const handleEditHexInput = (event: Event, setFieldValue: SetFieldValueFn) => {
 const editingId = ref<number | null>(null)
 const isSaving = ref(false)
 const isDeleting = ref<number | null>(null)
+
+// Confirmation modal state
+const confirmationState = reactive({
+  open: false,
+  actionTitle: '',
+  message: '',
+  confirmLabel: 'Confirm',
+  loading: false,
+})
+
+// Track pending delete
+const pendingDelete = ref<{ id: number; name: string } | null>(null)
 
 // Create new category
 const handleCreateCategory = async (values: any, actions: any) => {
@@ -413,20 +437,35 @@ const handleSaveEdit = async (values: any, actions: any) => {
 }
 
 // Delete category
-const handleDelete = async (categoryId: number, categoryName: string) => {
-  if (!confirm(`Are you sure you want to delete "${categoryName}"? Tasks using this category will have their category removed.`)) {
+const handleDelete = (categoryId: number, categoryName: string) => {
+  pendingDelete.value = { id: categoryId, name: categoryName }
+  confirmationState.actionTitle = 'Delete Category'
+  confirmationState.message = `Are you sure you want to delete "${categoryName}"? Tasks using this category will have their category removed.`
+  confirmationState.confirmLabel = 'Delete'
+  confirmationState.open = true
+}
+
+// Confirm delete
+const confirmDelete = async () => {
+  if (!pendingDelete.value) {
+    confirmationState.open = false
     return
   }
 
-  isDeleting.value = categoryId
+  confirmationState.loading = true
+  isDeleting.value = pendingDelete.value.id
+
   try {
-    await tasksStore.deleteCategory(categoryId)
+    await tasksStore.deleteCategory(pendingDelete.value.id)
     success('Category deleted successfully!')
   } catch (error) {
     console.error('Failed to delete category:', error)
     toastError('Failed to delete category. Please try again.')
   } finally {
+    confirmationState.loading = false
+    confirmationState.open = false
     isDeleting.value = null
+    pendingDelete.value = null
   }
 }
 </script>

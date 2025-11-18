@@ -101,15 +101,39 @@
         </table>
       </div>
     </div>
+
+    <!-- Confirmation Modal -->
+    <ConfirmationModal
+      v-model="confirmationState.open"
+      :action-title="confirmationState.actionTitle"
+      :message="confirmationState.message"
+      :confirm-label="confirmationState.confirmLabel"
+      cancel-label="Cancel"
+      :loading="confirmationState.loading"
+      @confirm="confirmUserAction"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, reactive } from 'vue'
 import { useAuthStore } from '../../stores/auth'
+import ConfirmationModal from '../modals/ConfirmationModal.vue'
 
 const authStore = useAuthStore()
 const actionLoading = ref<number | null>(null)
+
+// Confirmation modal state
+const confirmationState = reactive({
+  open: false,
+  actionTitle: '',
+  message: '',
+  confirmLabel: 'Confirm',
+  loading: false,
+})
+
+// Track pending action
+const pendingAction = ref<{ type: 'ban' | 'unban'; userId: number; userName: string } | null>(null)
 
 // Check if user is the currently logged in user
 const isCurrentUser = (userId: number): boolean => {
@@ -117,34 +141,46 @@ const isCurrentUser = (userId: number): boolean => {
 }
 
 // Handle ban user
-const handleBanUser = async (userId: number, userName: string) => {
-  if (!confirm(`Are you sure you want to ban "${userName}"? They will not be able to log in.`)) {
-    return
-  }
-
-  actionLoading.value = userId
-  try {
-    await authStore.banUser(userId)
-  } catch (error) {
-    console.error('Failed to ban user:', error)
-  } finally {
-    actionLoading.value = null
-  }
+const handleBanUser = (userId: number, userName: string) => {
+  pendingAction.value = { type: 'ban', userId, userName }
+  confirmationState.actionTitle = 'Ban User'
+  confirmationState.message = `Are you sure you want to ban "${userName}"? They will not be able to log in.`
+  confirmationState.confirmLabel = 'Ban User'
+  confirmationState.open = true
 }
 
 // Handle unban user
-const handleUnbanUser = async (userId: number, userName: string) => {
-  if (!confirm(`Are you sure you want to unban "${userName}"?`)) {
+const handleUnbanUser = (userId: number, userName: string) => {
+  pendingAction.value = { type: 'unban', userId, userName }
+  confirmationState.actionTitle = 'Unban User'
+  confirmationState.message = `Are you sure you want to unban "${userName}"?`
+  confirmationState.confirmLabel = 'Unban User'
+  confirmationState.open = true
+}
+
+// Confirm user action (ban or unban)
+const confirmUserAction = async () => {
+  if (!pendingAction.value) {
+    confirmationState.open = false
     return
   }
 
-  actionLoading.value = userId
+  confirmationState.loading = true
+  actionLoading.value = pendingAction.value.userId
+
   try {
-    await authStore.unbanUser(userId)
+    if (pendingAction.value.type === 'ban') {
+      await authStore.banUser(pendingAction.value.userId)
+    } else {
+      await authStore.unbanUser(pendingAction.value.userId)
+    }
   } catch (error) {
-    console.error('Failed to unban user:', error)
+    console.error(`Failed to ${pendingAction.value.type} user:`, error)
   } finally {
+    confirmationState.loading = false
+    confirmationState.open = false
     actionLoading.value = null
+    pendingAction.value = null
   }
 }
 </script>
