@@ -112,14 +112,14 @@
         </thead>
         <tbody class="bg-white divide-y divide-gray-200">
           <!-- Empty State -->
-          <tr v-if="tasksStore.categories.length === 0">
+          <tr v-if="categoriesStore.categories.length === 0">
             <td colspan="4" class="px-6 py-4 text-center text-sm text-gray-500">
               No categories yet. Add one above to get started.
             </td>
           </tr>
 
           <!-- Category Rows -->
-          <tr v-for="category in tasksStore.categories" :key="category.id" class="hover:bg-gray-50">
+          <tr v-for="category in categoriesStore.categories" :key="category.id" class="hover:bg-gray-50">
             <template v-if="editingId === category.id">
               <td colspan="4" class="px-0 py-0">
                 <Form
@@ -264,14 +264,14 @@
 import { ref, reactive } from 'vue'
 import { Form, Field, ErrorMessage } from 'vee-validate'
 import { toTypedSchema } from '@vee-validate/zod'
-import { useTasksStore } from '../../stores/tasks'
+import { useCategoriesStore } from '../../stores/categories'
 import { categorySchema } from '../../validators/task'
 import type { Category } from '../../types/task'
 import { z } from 'zod'
 import { useToast } from '../../composables/useToast'
 import ConfirmationModal from '../modals/ConfirmationModal.vue'
 
-const tasksStore = useTasksStore()
+const categoriesStore = useCategoriesStore()
 const { success, toastError } = useToast()
 
 // Edit schema with different field names to avoid conflicts
@@ -359,7 +359,7 @@ const pendingDelete = ref<{ id: number; name: string } | null>(null)
 const handleCreateCategory = async (values: any, actions: any) => {
   isCreating.value = true
   try {
-    await tasksStore.createCategory({
+    await categoriesStore.createCategory({
       ...values,
       color: newCategoryColor.value,
     })
@@ -406,7 +406,7 @@ const handleSaveEdit = async (values: any, actions: any) => {
 
   isSaving.value = true
   try {
-    await tasksStore.updateCategory(editingId.value, {
+    await categoriesStore.updateCategory(editingId.value, {
       name: values.edit_name,
       description: values.edit_description || '',
       color: values.edit_color,
@@ -456,7 +456,7 @@ const confirmDelete = async () => {
   isDeleting.value = pendingDelete.value.id
 
   try {
-    await tasksStore.deleteCategory(pendingDelete.value.id)
+    await categoriesStore.deleteCategory(pendingDelete.value.id)
     success('Category deleted successfully!')
   } catch (error) {
     console.error('Failed to delete category:', error)

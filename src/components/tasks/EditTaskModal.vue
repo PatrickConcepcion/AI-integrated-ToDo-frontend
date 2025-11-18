@@ -60,7 +60,7 @@
                 class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
               >
                 <option value="">No Category</option>
-                <option v-for="category in tasksStore.categories" :key="category.id" :value="String(category.id)">
+                <option v-for="category in categoriesStore.categories" :key="category.id" :value="String(category.id)">
                   {{ category.name }}
                 </option>
               </Field>
@@ -123,11 +123,13 @@ import { ref, computed } from 'vue'
 import { Form, Field, ErrorMessage } from 'vee-validate'
 import { toTypedSchema } from '@vee-validate/zod'
 import { useTasksStore } from '../../stores/tasks'
+import { useCategoriesStore } from '../../stores/categories'
 import { taskSchema } from '../../validators/task'
 import type { Task } from '../../types/task'
 import { useToast } from '../../composables/useToast'
 
 const tasksStore = useTasksStore()
+const categoriesStore = useCategoriesStore()
 const { success, toastError } = useToast()
 
 interface Props {
