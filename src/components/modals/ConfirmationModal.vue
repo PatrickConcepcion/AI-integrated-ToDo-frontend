@@ -18,14 +18,16 @@
           <h3 id="confirmation-title" class="text-lg font-semibold text-gray-900">
             <slot name="title">{{ actionTitle }}</slot>
           </h3>
-          <button
-            type="button"
-            class="p-2 text-gray-500 hover:text-gray-700 rounded-full"
-            aria-label="Close dialog"
-            @click="handleClose"
-          >
-            <span aria-hidden="true">&times;</span>
-          </button>
+        <button
+          type="button"
+          class="p-2 text-gray-500 hover:text-gray-700 rounded-full cursor-pointer"
+          aria-label="Close dialog"
+          @click="handleClose"
+        >
+          <svg class="w-5 h-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+            <path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z"/>
+          </svg>
+        </button>
         </header>
 
         <section class="px-6 py-5 text-gray-700 text-base leading-relaxed">
@@ -37,7 +39,8 @@
         <footer class="px-6 py-4 bg-gray-50 flex flex-col-reverse sm:flex-row sm:justify-end gap-3">
           <button
             type="button"
-            class="w-full sm:w-auto inline-flex justify-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400"
+            class="w-full sm:w-auto inline-flex justify-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400 disabled:opacity-60 disabled:cursor-not-allowed"
+            :disabled="loading"
             @click="handleClose"
           >
             {{ cancelLabel }}
@@ -101,6 +104,8 @@ const emit = defineEmits<{
   (e: 'confirm'): void
 }>()
 
+const FOCUSABLE_SELECTORS = 'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'
+
 const modalRef = ref<HTMLElement | null>(null)
 const focusableElements = ref<HTMLElement[]>([])
 
@@ -109,22 +114,20 @@ const close = () => {
 }
 
 const handleClose = () => {
+  if(props.loading) return
   close()
 }
 
 const handleConfirm = () => {
   emit('confirm')
-  nextTick(() => {
-    if (!props.loading) {
-      close()
-    }
-  })
 }
 
 const handleKeydown = (event: KeyboardEvent) => {
   if (!props.modelValue) return
 
   if (event.key === 'Escape') {
+    if(props.loading) return
+
     event.preventDefault()
     close()
   } else if (event.key === 'Tab') {
@@ -152,10 +155,8 @@ const trapFocus = (event: KeyboardEvent) => {
 }
 
 const updateFocusableElements = () => {
-  const selectors =
-    'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'
   focusableElements.value = Array.from(
-    modalRef.value?.querySelectorAll<HTMLElement>(selectors) ?? []
+    modalRef.value?.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTORS) ?? []
   )
 }
 

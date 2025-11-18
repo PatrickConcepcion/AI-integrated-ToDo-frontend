@@ -111,7 +111,7 @@
               v-model="inputMessage"
               type="text"
               placeholder="Type your message... (e.g., 'Create a task: Buy groceries tomorrow')"
-              class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+              class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 placeholder-gray-500"
               :disabled="aiStore.loading"
             />
             <button

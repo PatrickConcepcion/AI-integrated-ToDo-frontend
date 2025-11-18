@@ -258,8 +258,11 @@ const confirmTaskAction = async () => {
     }
   } catch (error) {
     console.error(`Failed to ${pendingAction.value.type} task:`, error)
-    archivingTaskId.value = null
-    deletingTaskId.value = null
+    if (pendingAction.value.type === 'archive') {
+      archivingTaskId.value = null
+    } else {
+      deletingTaskId.value = null
+    }
   } finally {
     confirmationState.loading = false
     confirmationState.open = false

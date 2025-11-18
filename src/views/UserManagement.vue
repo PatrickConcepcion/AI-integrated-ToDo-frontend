@@ -18,11 +18,6 @@
 
       <!-- User Management -->
       <div v-else class="bg-white rounded-lg shadow p-6">
-        <h3 class="text-lg font-semibold text-gray-900 mb-4">All Users</h3>
-        <p class="text-sm text-gray-600 mb-6">
-          View and manage all user accounts. You can ban or unban users as needed.
-        </p>
-
         <UserTable />
       </div>
     </main>
