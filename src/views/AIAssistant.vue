@@ -165,12 +165,14 @@
 import { ref, reactive, nextTick, onMounted, watch } from 'vue'
 import { useAiStore } from '../stores/ai'
 import { useTasksStore } from '../stores/tasks'
+import { useToast } from '../composables/useToast'
 import Header from '../components/Header.vue'
 import ConfirmationModal from '../components/modals/ConfirmationModal.vue'
 import { marked } from 'marked'
 
 const aiStore = useAiStore()
 const tasksStore = useTasksStore()
+const { toastError } = useToast()
 
 const inputMessage = ref('')
 const messagesContainer = ref<HTMLElement | null>(null)
@@ -235,7 +237,7 @@ const confirmClearChat = async () => {
   try {
     await aiStore.clearChat()
   } catch (error) {
-    alert('Failed to clear chat history. Please try again.')
+    toastError('Failed to clear chat history. Please try again.')
     console.error('Error clearing chat:', error)
   } finally {
     confirmationState.loading = false
@@ -290,7 +292,7 @@ onMounted(async () => {
     scrollToBottom()
   } catch (error) {
     console.error('Error fetching data on mount:', error)
-    alert('Failed to load data. Please refresh the page.')
+    toastError('Failed to load data. Please refresh the page.')
   }
 })
 </script>

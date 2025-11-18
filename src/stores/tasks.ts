@@ -2,8 +2,11 @@ import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import api from '../api/axios'
 import type { Task, Category, UpdateTaskInput } from '../types'
+import { useToast } from '../composables/useToast'
 
 export const useTasksStore = defineStore('tasks', () => {
+  const { toastError } = useToast()
+
   const tasks = ref<Task[]>([])
   const archivedTasks = ref<Task[]>([])
   const categories = ref<Category[]>([])
@@ -23,6 +26,7 @@ export const useTasksStore = defineStore('tasks', () => {
       const errorMessage = err instanceof Error
         ? (err as any).response?.data?.message || 'Failed to fetch tasks'
         : 'Failed to fetch tasks'
+      toastError(errorMessage)
       error.value = errorMessage
       throw err
     } finally {
@@ -42,6 +46,7 @@ export const useTasksStore = defineStore('tasks', () => {
       const errorMessage = err instanceof Error
         ? (err as any).response?.data?.message || 'Failed to fetch archived tasks'
         : 'Failed to fetch archived tasks'
+      toastError(errorMessage)
       error.value = errorMessage
       throw err
     } finally {
@@ -171,6 +176,7 @@ export const useTasksStore = defineStore('tasks', () => {
       const errorMessage = err instanceof Error
         ? (err as any).response?.data?.message || 'Failed to fetch categories'
         : 'Failed to fetch categories'
+      toastError(errorMessage)
       error.value = errorMessage
       throw err
     }
