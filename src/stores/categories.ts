@@ -3,6 +3,7 @@ import { ref } from 'vue'
 import api from '../api/axios'
 import type { Category } from '../types'
 import { useToast } from '../composables/useToast'
+import { handleApiError } from '../utils/apiErrorHandling'
 
 export const useCategoriesStore = defineStore('categories', () => {
   const { toastError } = useToast()
@@ -20,12 +21,7 @@ export const useCategoriesStore = defineStore('categories', () => {
       const response = await api.get('/categories')
       categories.value = response.data.data
     } catch (err: unknown) {
-      const errorMessage = err instanceof Error
-        ? (err as any).response?.data?.message || 'Failed to fetch categories'
-        : 'Failed to fetch categories'
-      toastError(errorMessage)
-      error.value = errorMessage
-      throw err
+      handleApiError(err, error, toastError, 'Failed to fetch categories')
     } finally {
       loading.value = false
     }
@@ -41,10 +37,7 @@ export const useCategoriesStore = defineStore('categories', () => {
       categories.value.push(response.data.data)
       return response.data.data
     } catch (err: unknown) {
-      const errorMessage = err instanceof Error
-        ? (err as any).response?.data?.message || 'Failed to create category'
-        : 'Failed to create category'
-      error.value = errorMessage
+      handleApiError(err, error, toastError, 'Failed to create category')
       throw err
     } finally {
       loading.value = false
@@ -64,10 +57,7 @@ export const useCategoriesStore = defineStore('categories', () => {
       }
       return response.data.data
     } catch (err: unknown) {
-      const errorMessage = err instanceof Error
-        ? (err as any).response?.data?.message || 'Failed to update category'
-        : 'Failed to update category'
-      error.value = errorMessage
+      handleApiError(err, error, toastError, 'Failed to update category')
       throw err
     } finally {
       loading.value = false
@@ -83,11 +73,7 @@ export const useCategoriesStore = defineStore('categories', () => {
       await api.delete(`/categories/${categoryId}`)
       categories.value = categories.value.filter((c) => c.id !== categoryId)
     } catch (err: unknown) {
-      const errorMessage = err instanceof Error
-        ? (err as any).response?.data?.message || 'Failed to delete category'
-        : 'Failed to delete category'
-      error.value = errorMessage
-      throw err
+      handleApiError(err, error, toastError, 'Failed to delete category')
     } finally {
       loading.value = false
     }

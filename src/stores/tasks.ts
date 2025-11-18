@@ -3,6 +3,7 @@ import { ref } from 'vue'
 import api from '../api/axios'
 import type { Task, UpdateTaskInput } from '../types'
 import { useToast } from '../composables/useToast'
+import { handleApiError } from '../utils/apiErrorHandling'
 
 export const useTasksStore = defineStore('tasks', () => {
   const { toastError } = useToast()
@@ -22,12 +23,7 @@ export const useTasksStore = defineStore('tasks', () => {
       const response = await api.get(`/tasks${params ? `?${params}` : ''}`)
       tasks.value = response.data.data
     } catch (err: unknown) {
-      const errorMessage = err instanceof Error
-        ? (err as any).response?.data?.message || 'Failed to fetch tasks'
-        : 'Failed to fetch tasks'
-      toastError(errorMessage)
-      error.value = errorMessage
-      throw err
+      handleApiError(err, error, toastError, 'Failed to fetch tasks')
     } finally {
       loading.value = false
     }
@@ -42,12 +38,7 @@ export const useTasksStore = defineStore('tasks', () => {
       const response = await api.get('/tasks/archived')
       archivedTasks.value = response.data.data
     } catch (err: unknown) {
-      const errorMessage = err instanceof Error
-        ? (err as any).response?.data?.message || 'Failed to fetch archived tasks'
-        : 'Failed to fetch archived tasks'
-      toastError(errorMessage)
-      error.value = errorMessage
-      throw err
+      handleApiError(err, error, toastError, 'Failed to fetch archived tasks')
     } finally {
       loading.value = false
     }
@@ -62,10 +53,7 @@ export const useTasksStore = defineStore('tasks', () => {
       const response = await api.post('/tasks', taskData)
       return response.data.data
     } catch (err: unknown) {
-      const errorMessage = err instanceof Error
-        ? (err as any).response?.data?.message || 'Failed to create task'
-        : 'Failed to create task'
-      error.value = errorMessage
+      handleApiError(err, error, toastError, 'Failed to create task')
       throw err
     } finally {
       loading.value = false
@@ -85,10 +73,7 @@ export const useTasksStore = defineStore('tasks', () => {
       }
       return response.data.data
     } catch (err: unknown) {
-      const errorMessage = err instanceof Error
-        ? (err as any).response?.data?.message || 'Failed to update task'
-        : 'Failed to update task'
-      error.value = errorMessage
+      handleApiError(err, error, toastError, 'Failed to update task')
       throw err
     } finally {
       loading.value = false
@@ -109,11 +94,7 @@ export const useTasksStore = defineStore('tasks', () => {
       await api.delete(`/tasks/${taskId}`)
       tasks.value = tasks.value.filter((t) => t.id !== taskId)
     } catch (err: unknown) {
-      const errorMessage = err instanceof Error
-        ? (err as any).response?.data?.message || 'Failed to delete task'
-        : 'Failed to delete task'
-      error.value = errorMessage
-      throw err
+      handleApiError(err, error, toastError, 'Failed to delete task')
     } finally {
       loading.value = false
     }
@@ -129,10 +110,7 @@ export const useTasksStore = defineStore('tasks', () => {
       }
       return response.data.data
     } catch (err: unknown) {
-      const errorMessage = err instanceof Error
-        ? (err as any).response?.data?.message || 'Failed to toggle task completion'
-        : 'Failed to toggle task completion'
-      error.value = errorMessage
+      handleApiError(err, error, toastError, 'Failed to toggle task completion')
       throw err
     }
   }
@@ -143,11 +121,7 @@ export const useTasksStore = defineStore('tasks', () => {
       await api.post(`/tasks/${taskId}/archive`)
       tasks.value = tasks.value.filter((t) => t.id !== taskId)
     } catch (err: unknown) {
-      const errorMessage = err instanceof Error
-        ? (err as any).response?.data?.message || 'Failed to archive task'
-        : 'Failed to archive task'
-      error.value = errorMessage
-      throw err
+      handleApiError(err, error, toastError, 'Failed to archive task')
     }
   }
 
@@ -158,10 +132,7 @@ export const useTasksStore = defineStore('tasks', () => {
       archivedTasks.value = archivedTasks.value.filter((t) => t.id !== taskId)
       return response.data.data
     } catch (err: unknown) {
-      const errorMessage = err instanceof Error
-        ? (err as any).response?.data?.message || 'Failed to unarchive task'
-        : 'Failed to unarchive task'
-      error.value = errorMessage
+      handleApiError(err, error, toastError, 'Failed to unarchive task')
       throw err
     }
   }

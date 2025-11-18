@@ -162,8 +162,14 @@ const confirmationState = reactive({
 const pendingAction = ref<{ type: 'archive' | 'delete'; taskId: number } | null>(null)
 
 onMounted(async () => {
-  await categoriesStore.fetchCategories()
-  await loadTasks()
+  try {
+    await Promise.all([
+      categoriesStore.fetchCategories(),
+      loadTasks()
+    ])
+  } catch (error) {
+    console.error('Failed to load dashboard data:', error)
+  }
 })
 
 const loadTasks = async () => {
