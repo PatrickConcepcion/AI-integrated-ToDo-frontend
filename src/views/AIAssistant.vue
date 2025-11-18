@@ -146,22 +146,45 @@
           <li>• "Show me my high priority tasks"</li>
         </ul>
       </div>
+
+      <!-- Confirmation Modal -->
+      <ConfirmationModal
+        v-model="confirmationState.open"
+        :action-title="confirmationState.actionTitle"
+        :message="confirmationState.message"
+        :confirm-label="confirmationState.confirmLabel"
+        cancel-label="Cancel"
+        :loading="confirmationState.loading"
+        @confirm="confirmClearChat"
+      />
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, nextTick, onMounted, watch } from 'vue'
+import { ref, reactive, nextTick, onMounted, watch } from 'vue'
 import { useAiStore } from '../stores/ai'
 import { useTasksStore } from '../stores/tasks'
+import { useToast } from '../composables/useToast'
 import Header from '../components/Header.vue'
+import ConfirmationModal from '../components/modals/ConfirmationModal.vue'
 import { marked } from 'marked'
 
 const aiStore = useAiStore()
 const tasksStore = useTasksStore()
+const { toastError } = useToast()
 
 const inputMessage = ref('')
 const messagesContainer = ref<HTMLElement | null>(null)
+
+// Confirmation modal state
+const confirmationState = reactive({
+  open: false,
+  actionTitle: '',
+  message: '',
+  confirmLabel: 'Confirm',
+  loading: false,
+})
 
 const suggestedPrompts = [
   'Who created you?',
@@ -199,14 +222,26 @@ const handleSubmit = async () => {
 /**
  * Clear chat history (both frontend and backend)
  */
-const handleClearChat = async () => {
-  if (confirm('Are you sure you want to clear the chat history? This will permanently delete all messages.')) {
-    try {
-      await aiStore.clearChat()
-    } catch (error) {
-      alert('Failed to clear chat history. Please try again.')
-      console.error('Error clearing chat:', error)
-    }
+const handleClearChat = () => {
+  confirmationState.actionTitle = 'Clear Chat History'
+  confirmationState.message = 'Are you sure you want to clear the chat history? This will permanently delete all messages.'
+  confirmationState.confirmLabel = 'Clear Chat'
+  confirmationState.open = true
+}
+
+/**
+ * Confirm clear chat
+ */
+const confirmClearChat = async () => {
+  confirmationState.loading = true
+  try {
+    await aiStore.clearChat()
+  } catch (error) {
+    toastError('Failed to clear chat history. Please try again.')
+    console.error('Error clearing chat:', error)
+  } finally {
+    confirmationState.loading = false
+    confirmationState.open = false
   }
 }
 
@@ -257,7 +292,7 @@ onMounted(async () => {
     scrollToBottom()
   } catch (error) {
     console.error('Error fetching data on mount:', error)
-    alert('Failed to load data. Please refresh the page.')
+    toastError('Failed to load data. Please refresh the page.')
   }
 })
 </script>

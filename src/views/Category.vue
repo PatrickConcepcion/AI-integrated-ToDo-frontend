@@ -6,7 +6,7 @@
     <!-- Main Content -->
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div class="mb-6">
-        <h2 class="text-2xl font-bold text-gray-900">Admin Panel</h2>
+        <h2 class="text-2xl font-bold text-gray-900">Categories Management</h2>
         <p class="text-sm text-gray-600 mt-1">Manage categories and system settings</p>
       </div>
 
@@ -17,11 +17,6 @@
 
       <!-- Category Management -->
       <div v-else class="bg-white rounded-lg shadow p-6">
-        <h3 class="text-lg font-semibold text-gray-900 mb-4">Category Management</h3>
-        <p class="text-sm text-gray-600 mb-6">
-          Manage task categories available across the application. Users can assign these categories to their tasks.
-        </p>
-
         <CategoryTable />
       </div>
     </main>
@@ -37,14 +32,20 @@ import { useTasksStore } from '../stores/tasks'
 const tasksStore = useTasksStore()
 const loading = ref(false)
 
-onMounted(async () => {
+const fetchCategories = async () => {
   loading.value = true
   try {
     await tasksStore.fetchCategories()
-  } catch (error) {
-    console.error('Failed to load categories:', error)
   } finally {
     loading.value = false
+  }
+}
+
+onMounted(async () => {
+  try {
+    await fetchCategories()
+  } catch (error) {
+    console.error('Failed to load categories:', error)
   }
 })
 </script>

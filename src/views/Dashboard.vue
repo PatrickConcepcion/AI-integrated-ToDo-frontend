@@ -110,6 +110,15 @@
     <!-- Modals -->
     <CreateTaskModal v-model:show="showCreateModal" @created="handleTaskCreated" />
     <EditTaskModal v-model:show="showEditModal" :task="editingTask" @updated="handleTaskUpdated" />
+    <ConfirmationModal
+      v-model="confirmationState.open"
+      :action-title="confirmationState.actionTitle"
+      :message="confirmationState.message"
+      :confirm-label="confirmationState.confirmLabel"
+      cancel-label="Cancel"
+      :loading="confirmationState.loading"
+      @confirm="confirmTaskAction"
+    />
   </div>
 </template>
 
@@ -119,6 +128,7 @@ import { useTasksStore } from '../stores/tasks'
 import TaskCard from '../components/tasks/TaskCard.vue'
 import CreateTaskModal from '../components/tasks/CreateTaskModal.vue'
 import EditTaskModal from '../components/tasks/EditTaskModal.vue'
+import ConfirmationModal from '../components/modals/ConfirmationModal.vue'
 import Header from '../components/Header.vue'
 import type { Task } from '../types/task'
 
@@ -136,6 +146,18 @@ const filters = reactive({
 const togglingTaskId = ref<number | null>(null)
 const archivingTaskId = ref<number | null>(null)
 const deletingTaskId = ref<number | null>(null)
+
+// Confirmation modal state
+const confirmationState = reactive({
+  open: false,
+  actionTitle: '',
+  message: '',
+  confirmLabel: 'Confirm',
+  loading: false,
+})
+
+// Track pending action
+const pendingAction = ref<{ type: 'archive' | 'delete'; taskId: number } | null>(null)
 
 onMounted(async () => {
   await tasksStore.fetchCategories()
@@ -195,33 +217,56 @@ const todoTasks = computed(() => tasksStore.tasks.filter(t => t.status === 'todo
 const inProgressTasks = computed(() => tasksStore.tasks.filter(t => t.status === 'in_progress'))
 const completedTasks = computed(() => tasksStore.tasks.filter(t => t.status === 'completed'))
 
-const archiveTask = async (taskId: number): Promise<void> => {
+const archiveTask = (taskId: number): void => {
   if (archivingTaskId.value) return // Prevent concurrent operations
 
-  if (!confirm('Archive this task?')) return
-
-  archivingTaskId.value = taskId
-  try {
-    await tasksStore.archiveTask(taskId)
-  } catch (error) {
-    console.error('Failed to archive task:', error)
-  } finally {
-    archivingTaskId.value = null
-  }
+  pendingAction.value = { type: 'archive', taskId }
+  confirmationState.actionTitle = 'Archive Task'
+  confirmationState.message = 'Archive this task?'
+  confirmationState.confirmLabel = 'Archive'
+  confirmationState.open = true
 }
 
-const deleteTask = async (taskId: number): Promise<void> => {
+const deleteTask = (taskId: number): void => {
   if (deletingTaskId.value) return // Prevent concurrent operations
 
-  if (!confirm('Delete this task permanently?')) return
+  pendingAction.value = { type: 'delete', taskId }
+  confirmationState.actionTitle = 'Delete Task'
+  confirmationState.message = 'Delete this task permanently?'
+  confirmationState.confirmLabel = 'Delete'
+  confirmationState.open = true
+}
 
-  deletingTaskId.value = taskId
+// Confirm task action (archive or delete)
+const confirmTaskAction = async () => {
+  if (!pendingAction.value) {
+    confirmationState.open = false
+    return
+  }
+
+  confirmationState.loading = true
+
   try {
-    await tasksStore.deleteTask(taskId)
+    if (pendingAction.value.type === 'archive') {
+      archivingTaskId.value = pendingAction.value.taskId
+      await tasksStore.archiveTask(pendingAction.value.taskId)
+      archivingTaskId.value = null
+    } else {
+      deletingTaskId.value = pendingAction.value.taskId
+      await tasksStore.deleteTask(pendingAction.value.taskId)
+      deletingTaskId.value = null
+    }
   } catch (error) {
-    console.error('Failed to delete task:', error)
+    console.error(`Failed to ${pendingAction.value.type} task:`, error)
+    if (pendingAction.value.type === 'archive') {
+      archivingTaskId.value = null
+    } else {
+      deletingTaskId.value = null
+    }
   } finally {
-    deletingTaskId.value = null
+    confirmationState.loading = false
+    confirmationState.open = false
+    pendingAction.value = null
   }
 }
 </script>
