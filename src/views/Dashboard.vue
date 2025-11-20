@@ -162,17 +162,10 @@ const confirmationState = reactive({
 const pendingAction = ref<{ type: 'archive' | 'delete'; taskId: number } | null>(null)
 
 onMounted(async () => {
-  const results = await Promise.allSettled([
+  await Promise.all([
     categoriesStore.fetchCategories(),
     loadTasks()
   ])
-  
-  results.forEach((result, index) => {
-    if (result.status === 'rejected') {
-      const operation = index === 0 ? 'categories' : 'tasks'
-      console.error(`Failed to load ${operation}:`, result.reason)
-    }
-  })
 })
 
 const loadTasks = async () => {

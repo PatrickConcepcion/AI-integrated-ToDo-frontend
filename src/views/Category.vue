@@ -34,18 +34,11 @@ const loading = ref(false)
 
 const fetchCategories = async () => {
   loading.value = true
-  try {
-    await categoriesStore.fetchCategories()
-  } finally {
-    loading.value = false
-  }
+  await categoriesStore.fetchCategories()
+  loading.value = false
 }
 
 onMounted(async () => {
-  try {
-    await fetchCategories()
-  } catch (error) {
-    console.error('Failed to load categories:', error)
-  }
+  await fetchCategories()
 })
 </script>
