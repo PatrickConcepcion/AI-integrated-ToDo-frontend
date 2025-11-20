@@ -109,11 +109,13 @@ import { resetPasswordSchema } from '../validators/auth'
 import { Form, Field, ErrorMessage } from 'vee-validate'
 import { toTypedSchema } from '@vee-validate/zod'
 import { useToast } from '../composables/useToast'
+import { useApiError } from '../composables/useApiError'
 
 const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
 const { success } = useToast()
+const { transformValidationErrors } = useApiError()
 const submitted = ref(false)
 
 const emailFromQuery = computed(() => (route.query.email as string) || '')
@@ -139,14 +141,8 @@ const handleResetPassword = async (values: any, actions: any) => {
   } catch (error: any) {
     console.error('Password reset failed:', error)
 
-    const validationErrors = error?.response?.data?.errors
-    if (validationErrors) {
-      const transformedErrors = Object.keys(validationErrors).reduce((acc, key) => {
-        acc[key] = Array.isArray(validationErrors[key])
-          ? validationErrors[key][0]
-          : validationErrors[key]
-        return acc
-      }, {} as Record<string, string>)
+    const transformedErrors = transformValidationErrors(error)
+    if (transformedErrors) {
       actions.setErrors(transformedErrors)
     }
   }

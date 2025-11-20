@@ -2,11 +2,10 @@ import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import api from '../api/axios'
 import type { Category } from '../types'
-import { useToast } from '../composables/useToast'
-import { handleApiError } from '../utils/apiErrorHandling'
+import { useApiError } from '../composables/useApiError'
 
 export const useCategoriesStore = defineStore('categories', () => {
-  const { toastError } = useToast()
+  const { handleApiError } = useApiError()
 
   const categories = ref<Category[]>([])
   const loading = ref(false)
@@ -21,7 +20,8 @@ export const useCategoriesStore = defineStore('categories', () => {
       const response = await api.get('/categories')
       categories.value = response.data.data
     } catch (err: unknown) {
-      handleApiError(err, error, toastError, 'Failed to fetch categories')
+      console.error('Failed to fetch categories:', err)
+      handleApiError(err, error, 'Failed to fetch categories')
       throw err
     } finally {
       loading.value = false
@@ -38,7 +38,8 @@ export const useCategoriesStore = defineStore('categories', () => {
       categories.value.push(response.data.data)
       return response.data.data
     } catch (err: unknown) {
-      handleApiError(err, error, toastError, 'Failed to create category')
+      console.error('Failed to create category:', err)
+      handleApiError(err, error, 'Failed to create category')
       throw err
     } finally {
       loading.value = false
@@ -58,7 +59,8 @@ export const useCategoriesStore = defineStore('categories', () => {
       }
       return response.data.data
     } catch (err: unknown) {
-      handleApiError(err, error, toastError, 'Failed to update category')
+      console.error('Failed to update category:', err)
+      handleApiError(err, error, 'Failed to update category')
       throw err
     } finally {
       loading.value = false
@@ -74,7 +76,8 @@ export const useCategoriesStore = defineStore('categories', () => {
       await api.delete(`/categories/${categoryId}`)
       categories.value = categories.value.filter((c) => c.id !== categoryId)
     } catch (err: unknown) {
-      handleApiError(err, error, toastError, 'Failed to delete category')
+      console.error('Failed to delete category:', err)
+      handleApiError(err, error, 'Failed to delete category')
       throw err
     } finally {
       loading.value = false

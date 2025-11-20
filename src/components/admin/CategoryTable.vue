@@ -270,9 +270,11 @@ import type { Category } from '../../types/task'
 import { z } from 'zod'
 import { useToast } from '../../composables/useToast'
 import ConfirmationModal from '../modals/ConfirmationModal.vue'
+import { useApiError } from '../../composables/useApiError'
 
 const categoriesStore = useCategoriesStore()
 const { success } = useToast()
+const { transformValidationErrors } = useApiError()
 
 // Edit schema with different field names to avoid conflicts
 const editCategorySchema = z.object({
@@ -369,16 +371,8 @@ const handleCreateCategory = async (values: any, actions: any) => {
   } catch (error: any) {
     console.error('Failed to create category:', error)
 
-    // Extract backend validation errors and set them in the form
-    const validationErrors = error?.response?.data?.errors
-    if (validationErrors) {
-      // Transform Laravel's array-based errors to VeeValidate's string-based errors
-      const transformedErrors = Object.keys(validationErrors).reduce((acc, key) => {
-        acc[key] = Array.isArray(validationErrors[key])
-          ? validationErrors[key][0]
-          : validationErrors[key]
-        return acc
-      }, {} as Record<string, string>)
+    const transformedErrors = transformValidationErrors(error)
+    if (transformedErrors) {
       actions.setErrors(transformedErrors)
     }
   } finally {
@@ -414,18 +408,15 @@ const handleSaveEdit = async (values: any, actions: any) => {
   } catch (error: any) {
     console.error('Failed to update category:', error)
 
-    const validationErrors = error?.response?.data?.errors
-    if (validationErrors) {
-      // Transform Laravel's array-based errors to VeeValidate's string-based errors
-      // and map field names to edit form field names
-      const transformedErrors = Object.keys(validationErrors).reduce((acc, key) => {
+    const transformedErrors = transformValidationErrors(error)
+    if (transformedErrors) {
+      // Map field names to edit form field names
+      const mappedErrors: Record<string, string> = {}
+      Object.keys(transformedErrors).forEach((key) => {
         const editFieldName = key === 'name' ? 'edit_name' : key === 'description' ? 'edit_description' : key === 'color' ? 'edit_color' : key
-        acc[editFieldName] = Array.isArray(validationErrors[key])
-          ? validationErrors[key][0]
-          : validationErrors[key]
-        return acc
-      }, {} as Record<string, string>)
-      actions.setErrors(transformedErrors)
+        mappedErrors[editFieldName] = transformedErrors[key]
+      })
+      actions.setErrors(mappedErrors)
     }
   } finally {
     isSaving.value = false

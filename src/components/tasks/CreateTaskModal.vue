@@ -108,10 +108,12 @@ import { useTasksStore } from '../../stores/tasks'
 import { useCategoriesStore } from '../../stores/categories'
 import { taskSchema } from '../../validators/task'
 import { useToast } from '../../composables/useToast'
+import { useApiError } from '../../composables/useApiError'
 
 const tasksStore = useTasksStore()
 const categoriesStore = useCategoriesStore()
 const { success } = useToast()
+const { transformValidationErrors } = useApiError()
 
 interface Props {
   show: boolean
@@ -137,14 +139,8 @@ const handleCreateTask = async (values: any, actions: any) => {
   } catch (error: any) {
     console.error('Failed to create task:', error)
 
-    const validationErrors = error?.response?.data?.errors
-    if (validationErrors) {
-      const transformedErrors = Object.keys(validationErrors).reduce((acc, key) => {
-        acc[key] = Array.isArray(validationErrors[key])
-          ? validationErrors[key][0]
-          : validationErrors[key]
-        return acc
-      }, {} as Record<string, string>)
+    const transformedErrors = transformValidationErrors(error)
+    if (transformedErrors) {
       actions.setErrors(transformedErrors)
     }
   } finally {
