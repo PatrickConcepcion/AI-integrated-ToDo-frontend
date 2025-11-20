@@ -54,7 +54,7 @@
                   {{ task.priority }}
                 </span>
                 <span class="text-xs text-gray-500">
-                  Archived: {{ new Date(task.archived_at).toLocaleDateString() }}
+                  Archived: {{ formatArchivedDate(task) }}
                 </span>
               </div>
             </div>
@@ -99,5 +99,10 @@ const unarchiveTask = async (taskId) => {
   } finally {
     unarchivingTaskId.value = null
   }
+}
+
+const formatArchivedDate = (task) => {
+  const dateValue = task?.updated_at || task?.updatedAt || task?.created_at || task?.createdAt
+  return dateValue ? new Date(dateValue).toLocaleDateString() : 'N/A'
 }
 </script>

@@ -121,6 +121,7 @@ describe('Tasks Store', () => {
             id: 1, 
             name: 'Task 1',
             title: 'Task 1',
+            status: 'todo' as const,
             completed: false,
             userId: 1,
             createdAt: '2025-11-20T00:00:00Z',
