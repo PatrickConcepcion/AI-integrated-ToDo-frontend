@@ -22,6 +22,7 @@ export const useCategoriesStore = defineStore('categories', () => {
       categories.value = response.data.data
     } catch (err: unknown) {
       handleApiError(err, error, toastError, 'Failed to fetch categories')
+      throw err
     } finally {
       loading.value = false
     }
@@ -74,6 +75,7 @@ export const useCategoriesStore = defineStore('categories', () => {
       categories.value = categories.value.filter((c) => c.id !== categoryId)
     } catch (err: unknown) {
       handleApiError(err, error, toastError, 'Failed to delete category')
+      throw err
     } finally {
       loading.value = false
     }

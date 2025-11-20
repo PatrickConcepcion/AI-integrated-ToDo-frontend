@@ -8,7 +8,7 @@ export const handleApiError = (
   fallbackMessage: string
 ): string => {
   const errorMessage =
-    err instanceof AxiosError && err.response?.data?.message
+    err instanceof AxiosError && typeof err.response?.data?.message === 'string'
       ? err.response.data.message
       : fallbackMessage
   toastError(errorMessage)
