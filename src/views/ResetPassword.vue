@@ -113,7 +113,7 @@ import { useToast } from '../composables/useToast'
 const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
-const { success, toastError } = useToast()
+const { success } = useToast()
 const submitted = ref(false)
 
 const emailFromQuery = computed(() => (route.query.email as string) || '')
@@ -148,8 +148,6 @@ const handleResetPassword = async (values: any, actions: any) => {
         return acc
       }, {} as Record<string, string>)
       actions.setErrors(transformedErrors)
-    } else {
-      toastError('Password reset failed. Please try again.')
     }
   }
 }

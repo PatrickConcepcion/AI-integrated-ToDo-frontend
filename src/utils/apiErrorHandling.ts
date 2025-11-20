@@ -11,7 +11,9 @@ export const handleApiError = (
     err instanceof AxiosError && typeof err.response?.data?.message === 'string'
       ? err.response.data.message
       : fallbackMessage
+
   toastError(errorMessage)
   errorRef.value = errorMessage
+
   return errorMessage
 }

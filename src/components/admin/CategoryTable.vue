@@ -272,7 +272,7 @@ import { useToast } from '../../composables/useToast'
 import ConfirmationModal from '../modals/ConfirmationModal.vue'
 
 const categoriesStore = useCategoriesStore()
-const { success, toastError } = useToast()
+const { success } = useToast()
 
 // Edit schema with different field names to avoid conflicts
 const editCategorySchema = z.object({
@@ -380,8 +380,6 @@ const handleCreateCategory = async (values: any, actions: any) => {
         return acc
       }, {} as Record<string, string>)
       actions.setErrors(transformedErrors)
-    } else {
-      toastError('Failed to create category. Please try again.')
     }
   } finally {
     isCreating.value = false
@@ -428,8 +426,6 @@ const handleSaveEdit = async (values: any, actions: any) => {
         return acc
       }, {} as Record<string, string>)
       actions.setErrors(transformedErrors)
-    } else {
-      toastError('Failed to update category. Please try again.')
     }
   } finally {
     isSaving.value = false
@@ -460,7 +456,6 @@ const confirmDelete = async () => {
     success('Category deleted successfully!')
   } catch (error) {
     console.error('Failed to delete category:', error)
-    toastError('Failed to delete category. Please try again.')
   } finally {
     confirmationState.loading = false
     confirmationState.open = false

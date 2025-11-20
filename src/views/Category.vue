@@ -28,10 +28,8 @@ import { onMounted, ref } from 'vue'
 import Header from '../components/Header.vue'
 import CategoryTable from '../components/admin/CategoryTable.vue'
 import { useCategoriesStore } from '../stores/categories'
-import { useToast } from '../composables/useToast'
 
 const categoriesStore = useCategoriesStore()
-const { toastError } = useToast()
 const loading = ref(false)
 
 const fetchCategories = async () => {
@@ -48,7 +46,6 @@ onMounted(async () => {
     await fetchCategories()
   } catch (error) {
     console.error('Failed to load categories:', error)
-    toastError('Failed to load categories. Please refresh the page.')
   }
 })
 </script>

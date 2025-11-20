@@ -130,7 +130,7 @@ import { useToast } from '../../composables/useToast'
 
 const tasksStore = useTasksStore()
 const categoriesStore = useCategoriesStore()
-const { success, toastError } = useToast()
+const { success } = useToast()
 
 interface Props {
   show: boolean
@@ -190,8 +190,6 @@ const handleEditTask = async (values: any, actions: any) => {
         return acc
       }, {} as Record<string, string>)
       actions.setErrors(transformedErrors)
-    } else {
-      toastError('Failed to update task. Please try again.')
     }
   } finally {
     isSubmitting.value = false

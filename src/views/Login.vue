@@ -105,34 +105,20 @@ import { useToast } from '../composables/useToast'
 
 const router = useRouter()
 const authStore = useAuthStore()
-const { success, toastError } = useToast()
+const { success } = useToast()
 
 // Password visibility toggle state
 const showPassword = ref(false)
 
-const handleLogin = async (values: any, actions: any) => {
-  try {
-    await authStore.login({
-      email: values.email,
-      password: values.password,
-    })
+const handleLogin = async (values: any) => {
+  const loginSuccess = await authStore.login({
+    email: values.email,
+    password: values.password,
+  })
+
+  if (loginSuccess) {
     success('Login successful!')
     router.push('/')
-  } catch (error: any) {
-    console.error('Login failed:', error)
-
-    const validationErrors = error?.response?.data?.errors
-    if (validationErrors) {
-      const transformedErrors = Object.keys(validationErrors).reduce((acc, key) => {
-        acc[key] = Array.isArray(validationErrors[key])
-          ? validationErrors[key][0]
-          : validationErrors[key]
-        return acc
-      }, {} as Record<string, string>)
-      actions.setErrors(transformedErrors)
-    } else {
-      toastError('Login failed. Please check your credentials.')
-    }
   }
 }
 </script>

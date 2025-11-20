@@ -29,10 +29,8 @@ import { onMounted, ref } from 'vue'
 import Header from '../components/Header.vue'
 import UserTable from '../components/admin/UserTable.vue'
 import { useAuthStore } from '../stores/auth'
-import { useToast } from '../composables/useToast'
 
 const authStore = useAuthStore()
-const { toastError } = useToast()
 const loading = ref(false)
 
 onMounted(async () => {
@@ -41,7 +39,6 @@ onMounted(async () => {
     await authStore.fetchUsers()
   } catch (error) {
     console.error('Failed to load users:', error)
-    toastError('Failed to load users. Please refresh the page.')
   } finally {
     loading.value = false
   }

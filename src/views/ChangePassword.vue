@@ -136,7 +136,7 @@ import { useToast } from '../composables/useToast'
 
 const router = useRouter()
 const authStore = useAuthStore()
-const { success, toastError } = useToast()
+const { success } = useToast()
 
 // Password visibility toggle states
 const showCurrentPassword = ref(false)
@@ -165,8 +165,6 @@ const handleChangePassword = async (values: any, actions: any) => {
         return acc
       }, {} as Record<string, string>)
       actions.setErrors(transformedErrors)
-    } else {
-      toastError('Failed to change password. Please try again.')
     }
   }
 }
