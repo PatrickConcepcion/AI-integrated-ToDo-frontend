@@ -41,12 +41,6 @@ export function useApiError() {
    *
    * @param error - The error object from axios
    * @returns Object mapping field names to error messages, or null if no validation errors exist
-   *
-   * @example
-   * const errors = transformValidationErrors(error)
-   * if (errors) {
-   *   actions.setErrors(errors)
-   * }
    */
   const transformValidationErrors = (
     error: any
