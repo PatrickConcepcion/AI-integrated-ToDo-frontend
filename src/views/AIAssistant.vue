@@ -283,16 +283,11 @@ watch(
 
 // Fetch tasks and message history on mount
 onMounted(async () => {
-  try {
-    await Promise.all([
-      tasksStore.fetchTasks(),
-      aiStore.fetchMessages()
-    ])
-    // Scroll to bottom after mount to show latest messages
-    scrollToBottom()
-  } catch (error) {
-    console.error('Error fetching data on mount:', error)
-    toastError('Failed to load data. Please refresh the page.')
-  }
+  await Promise.all([
+    tasksStore.fetchTasks(),
+    aiStore.fetchMessages()
+  ])
+  // Scroll to bottom after mount to show latest messages
+  scrollToBottom()
 })
 </script>

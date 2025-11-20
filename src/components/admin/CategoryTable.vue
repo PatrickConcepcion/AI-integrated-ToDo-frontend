@@ -112,14 +112,14 @@
         </thead>
         <tbody class="bg-white divide-y divide-gray-200">
           <!-- Empty State -->
-          <tr v-if="tasksStore.categories.length === 0">
+          <tr v-if="categoriesStore.categories.length === 0">
             <td colspan="4" class="px-6 py-4 text-center text-sm text-gray-500">
               No categories yet. Add one above to get started.
             </td>
           </tr>
 
           <!-- Category Rows -->
-          <tr v-for="category in tasksStore.categories" :key="category.id" class="hover:bg-gray-50">
+          <tr v-for="category in categoriesStore.categories" :key="category.id" class="hover:bg-gray-50">
             <template v-if="editingId === category.id">
               <td colspan="4" class="px-0 py-0">
                 <Form
@@ -264,15 +264,17 @@
 import { ref, reactive } from 'vue'
 import { Form, Field, ErrorMessage } from 'vee-validate'
 import { toTypedSchema } from '@vee-validate/zod'
-import { useTasksStore } from '../../stores/tasks'
+import { useCategoriesStore } from '../../stores/categories'
 import { categorySchema } from '../../validators/task'
 import type { Category } from '../../types/task'
 import { z } from 'zod'
 import { useToast } from '../../composables/useToast'
 import ConfirmationModal from '../modals/ConfirmationModal.vue'
+import { useApiError } from '../../composables/useApiError'
 
-const tasksStore = useTasksStore()
-const { success, toastError } = useToast()
+const categoriesStore = useCategoriesStore()
+const { success } = useToast()
+const { transformValidationErrors } = useApiError()
 
 // Edit schema with different field names to avoid conflicts
 const editCategorySchema = z.object({
@@ -359,7 +361,7 @@ const pendingDelete = ref<{ id: number; name: string } | null>(null)
 const handleCreateCategory = async (values: any, actions: any) => {
   isCreating.value = true
   try {
-    await tasksStore.createCategory({
+    await categoriesStore.createCategory({
       ...values,
       color: newCategoryColor.value,
     })
@@ -369,19 +371,9 @@ const handleCreateCategory = async (values: any, actions: any) => {
   } catch (error: any) {
     console.error('Failed to create category:', error)
 
-    // Extract backend validation errors and set them in the form
-    const validationErrors = error?.response?.data?.errors
-    if (validationErrors) {
-      // Transform Laravel's array-based errors to VeeValidate's string-based errors
-      const transformedErrors = Object.keys(validationErrors).reduce((acc, key) => {
-        acc[key] = Array.isArray(validationErrors[key])
-          ? validationErrors[key][0]
-          : validationErrors[key]
-        return acc
-      }, {} as Record<string, string>)
+    const transformedErrors = transformValidationErrors(error)
+    if (transformedErrors) {
       actions.setErrors(transformedErrors)
-    } else {
-      toastError('Failed to create category. Please try again.')
     }
   } finally {
     isCreating.value = false
@@ -406,7 +398,7 @@ const handleSaveEdit = async (values: any, actions: any) => {
 
   isSaving.value = true
   try {
-    await tasksStore.updateCategory(editingId.value, {
+    await categoriesStore.updateCategory(editingId.value, {
       name: values.edit_name,
       description: values.edit_description || '',
       color: values.edit_color,
@@ -416,20 +408,15 @@ const handleSaveEdit = async (values: any, actions: any) => {
   } catch (error: any) {
     console.error('Failed to update category:', error)
 
-    const validationErrors = error?.response?.data?.errors
-    if (validationErrors) {
-      // Transform Laravel's array-based errors to VeeValidate's string-based errors
-      // and map field names to edit form field names
-      const transformedErrors = Object.keys(validationErrors).reduce((acc, key) => {
+    const transformedErrors = transformValidationErrors(error)
+    if (transformedErrors) {
+      // Map field names to edit form field names
+      const mappedErrors: Record<string, string> = {}
+      Object.keys(transformedErrors).forEach((key) => {
         const editFieldName = key === 'name' ? 'edit_name' : key === 'description' ? 'edit_description' : key === 'color' ? 'edit_color' : key
-        acc[editFieldName] = Array.isArray(validationErrors[key])
-          ? validationErrors[key][0]
-          : validationErrors[key]
-        return acc
-      }, {} as Record<string, string>)
-      actions.setErrors(transformedErrors)
-    } else {
-      toastError('Failed to update category. Please try again.')
+        mappedErrors[editFieldName] = transformedErrors[key]
+      })
+      actions.setErrors(mappedErrors)
     }
   } finally {
     isSaving.value = false
@@ -456,11 +443,10 @@ const confirmDelete = async () => {
   isDeleting.value = pendingDelete.value.id
 
   try {
-    await tasksStore.deleteCategory(pendingDelete.value.id)
+    await categoriesStore.deleteCategory(pendingDelete.value.id)
     success('Category deleted successfully!')
   } catch (error) {
     console.error('Failed to delete category:', error)
-    toastError('Failed to delete category. Please try again.')
   } finally {
     confirmationState.loading = false
     confirmationState.open = false

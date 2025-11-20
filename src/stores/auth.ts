@@ -10,9 +10,11 @@ import type {
   ResetPasswordPayload,
 } from '../types/auth'
 import { useToast } from '../composables/useToast'
+import { useApiError } from '../composables/useApiError'
 
 export const useAuthStore = defineStore('auth', () => {
-  const { success, toastError } = useToast()
+  const { success } = useToast()
+  const { handleApiError } = useApiError()
 
   const user = ref<User | null>(null)
   const token = ref<string | null>(null)
@@ -62,11 +64,9 @@ export const useAuthStore = defineStore('auth', () => {
 
       return true
     } catch (err: unknown) {
-      const errorMessage = err instanceof Error
-        ? (err as any).response?.data?.message || 'Login failed'
-        : 'Login failed'
-      error.value = errorMessage
-      throw err
+      console.error('Login failed:', err)
+      handleApiError(err, error, 'Login failed')
+      return false
     } finally {
       loading.value = false
     }
@@ -89,11 +89,9 @@ export const useAuthStore = defineStore('auth', () => {
 
       return true
     } catch (err: unknown) {
-      const errorMessage = err instanceof Error
-        ? (err as any).response?.data?.message || 'Registration failed'
-        : 'Registration failed'
-      error.value = errorMessage
-      throw err
+      console.error('Registration failed:', err)
+      handleApiError(err, error, 'Registration failed')
+      return false
     } finally {
       loading.value = false
     }
@@ -107,6 +105,7 @@ export const useAuthStore = defineStore('auth', () => {
       localStorage.setItem('user', JSON.stringify(user.value))
     } catch (err) {
       console.error('Failed to fetch user:', err)
+      handleApiError(err, error, 'Failed to fetch user profile')
       throw err
     }
   }
@@ -135,11 +134,7 @@ export const useAuthStore = defineStore('auth', () => {
       success('If an account exists for that email, a password reset link has been sent.')
     } catch (err: unknown) {
       console.error('Failed to send password reset link:', err)
-      const errorMessage = err instanceof Error
-        ? (err as any).response?.data?.message || 'Failed to send password reset link'
-        : 'Failed to send password reset link'
-      error.value = errorMessage
-      toastError(errorMessage)
+      handleApiError(err, error, 'Failed to send password reset link')
       throw err
     } finally {
       loading.value = false
@@ -156,11 +151,7 @@ export const useAuthStore = defineStore('auth', () => {
       success('Your password has been reset. You can now sign in.')
     } catch (err: unknown) {
       console.error('Failed to reset password:', err)
-      const errorMessage = err instanceof Error
-        ? (err as any).response?.data?.message || 'Failed to reset password'
-        : 'Failed to reset password'
-      error.value = errorMessage
-      toastError(errorMessage)
+      handleApiError(err, error, 'Failed to reset password')
       throw err
     } finally {
       loading.value = false
@@ -177,11 +168,7 @@ export const useAuthStore = defineStore('auth', () => {
       success('Password updated successfully!')
     } catch (err: unknown) {
       console.error('Failed to change password:', err)
-      const errorMessage = err instanceof Error
-        ? (err as any).response?.data?.message || 'Failed to change password'
-        : 'Failed to change password'
-      error.value = errorMessage
-      toastError(errorMessage)
+      handleApiError(err, error, 'Failed to change password')
       throw err
     } finally {
       loading.value = false
@@ -198,11 +185,7 @@ export const useAuthStore = defineStore('auth', () => {
       users.value = response.data.data
     } catch (err: unknown) {
       console.error('Failed to fetch users:', err)
-      const errorMessage = err instanceof Error
-        ? (err as any).response?.data?.message || 'Failed to fetch users'
-        : 'Failed to fetch users'
-      error.value = errorMessage
-      toastError(errorMessage)
+      handleApiError(err, error, 'Failed to fetch users')
       throw err
     } finally {
       loading.value = false
@@ -221,11 +204,7 @@ export const useAuthStore = defineStore('auth', () => {
       await fetchUsers()
     } catch (err: unknown) {
       console.error('Failed to ban user:', err)
-      const errorMessage = err instanceof Error
-        ? (err as any).response?.data?.message || 'Failed to ban user'
-        : 'Failed to ban user'
-      error.value = errorMessage
-      toastError(errorMessage)
+      handleApiError(err, error, 'Failed to ban user')
       throw err
     } finally {
       loading.value = false
@@ -244,11 +223,7 @@ export const useAuthStore = defineStore('auth', () => {
       await fetchUsers()
     } catch (err: unknown) {
       console.error('Failed to unban user:', err)
-      const errorMessage = err instanceof Error
-        ? (err as any).response?.data?.message || 'Failed to unban user'
-        : 'Failed to unban user'
-      error.value = errorMessage
-      toastError(errorMessage)
+      handleApiError(err, error, 'Failed to unban user')
       throw err
     } finally {
       loading.value = false

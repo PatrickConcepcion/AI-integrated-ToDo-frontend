@@ -27,25 +27,18 @@
 import { onMounted, ref } from 'vue'
 import Header from '../components/Header.vue'
 import CategoryTable from '../components/admin/CategoryTable.vue'
-import { useTasksStore } from '../stores/tasks'
+import { useCategoriesStore } from '../stores/categories'
 
-const tasksStore = useTasksStore()
+const categoriesStore = useCategoriesStore()
 const loading = ref(false)
 
 const fetchCategories = async () => {
   loading.value = true
-  try {
-    await tasksStore.fetchCategories()
-  } finally {
-    loading.value = false
-  }
+  await categoriesStore.fetchCategories()
+  loading.value = false
 }
 
 onMounted(async () => {
-  try {
-    await fetchCategories()
-  } catch (error) {
-    console.error('Failed to load categories:', error)
-  }
+  await fetchCategories()
 })
 </script>

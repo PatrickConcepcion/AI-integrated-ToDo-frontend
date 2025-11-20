@@ -35,12 +35,7 @@ const loading = ref(false)
 
 onMounted(async () => {
   loading.value = true
-  try {
-    await authStore.fetchUsers()
-  } catch (error) {
-    console.error('Failed to load users:', error)
-  } finally {
-    loading.value = false
-  }
+  await authStore.fetchUsers()
+  loading.value = false
 })
 </script>

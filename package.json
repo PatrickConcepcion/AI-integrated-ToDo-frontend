@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "vitest"
   },
   "dependencies": {
     "@heroicons/vue": "^2.2.0",
@@ -27,13 +28,16 @@
     "@types/lodash-es": "^4.17.12",
     "@typescript-eslint/parser": "^8.46.4",
     "@vitejs/plugin-vue": "^6.0.1",
+    "@vue/test-utils": "^2.4.6",
     "@vue/tsconfig": "^0.8.1",
     "audit-ci": "^7.1.0",
     "eslint": "^9.39.1",
     "eslint-plugin-vue": "^10.5.1",
+    "jsdom": "^27.2.0",
     "tailwindcss": "^4.1.16",
     "typescript": "^5.9.3",
     "vite": "^7.1.7",
+    "vitest": "^4.0.10",
     "vue-tsc": "^3.1.3"
   }
 }

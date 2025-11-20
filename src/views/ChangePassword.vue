@@ -133,10 +133,12 @@ import { Form, Field, ErrorMessage } from 'vee-validate'
 import { toTypedSchema } from '@vee-validate/zod'
 import { EyeIcon, EyeSlashIcon } from '@heroicons/vue/24/outline'
 import { useToast } from '../composables/useToast'
+import { useApiError } from '../composables/useApiError'
 
 const router = useRouter()
 const authStore = useAuthStore()
-const { success, toastError } = useToast()
+const { success } = useToast()
+const { transformValidationErrors } = useApiError()
 
 // Password visibility toggle states
 const showCurrentPassword = ref(false)
@@ -156,17 +158,9 @@ const handleChangePassword = async (values: any, actions: any) => {
   } catch (error: any) {
     console.error('Change password failed:', error)
 
-    const validationErrors = error?.response?.data?.errors
-    if (validationErrors) {
-      const transformedErrors = Object.keys(validationErrors).reduce((acc, key) => {
-        acc[key] = Array.isArray(validationErrors[key])
-          ? validationErrors[key][0]
-          : validationErrors[key]
-        return acc
-      }, {} as Record<string, string>)
+    const transformedErrors = transformValidationErrors(error)
+    if (transformedErrors) {
       actions.setErrors(transformedErrors)
-    } else {
-      toastError('Failed to change password. Please try again.')
     }
   }
 }

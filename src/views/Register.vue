@@ -142,37 +142,23 @@ import { useToast } from '../composables/useToast'
 
 const router = useRouter()
 const authStore = useAuthStore()
-const { success, toastError } = useToast()
+const { success } = useToast()
 
 // Password visibility toggle states
 const showPassword = ref(false)
 const showConfirmPassword = ref(false)
 
-const handleRegister = async (values: any, actions: any) => {
-  try {
-    await authStore.register({
-      name: values.name,
-      email: values.email,
-      password: values.password,
-      password_confirmation: values.password_confirmation,
-    })
+const handleRegister = async (values: any) => {
+  const registerSuccess = await authStore.register({
+    name: values.name,
+    email: values.email,
+    password: values.password,
+    password_confirmation: values.password_confirmation,
+  })
+
+  if (registerSuccess) {
     success('Registration successful! Welcome to AI Todo App.')
     router.push('/')
-  } catch (error: any) {
-    console.error('Registration failed:', error)
-
-    const validationErrors = error?.response?.data?.errors
-    if (validationErrors) {
-      const transformedErrors = Object.keys(validationErrors).reduce((acc, key) => {
-        acc[key] = Array.isArray(validationErrors[key])
-          ? validationErrors[key][0]
-          : validationErrors[key]
-        return acc
-      }, {} as Record<string, string>)
-      actions.setErrors(transformedErrors)
-    } else {
-      toastError('Registration failed. Please check your information and try again.')
-    }
   }
 }
 </script>

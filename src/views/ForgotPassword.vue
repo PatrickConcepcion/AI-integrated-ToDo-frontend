@@ -72,11 +72,11 @@ import { useAuthStore } from '../stores/auth'
 import { forgotPasswordSchema } from '../validators/auth'
 import { Form, Field, ErrorMessage } from 'vee-validate'
 import { toTypedSchema } from '@vee-validate/zod'
-import { useToast } from '../composables/useToast'
+import { useApiError } from '../composables/useApiError'
 
 const authStore = useAuthStore()
-const { toastError } = useToast()
 const submitted = ref(false)
+const { transformValidationErrors } = useApiError()
 
 const handleForgotPassword = async (values: any, actions: any) => {
   try {
@@ -87,17 +87,9 @@ const handleForgotPassword = async (values: any, actions: any) => {
   } catch (error: any) {
     console.error('Forgot password request failed:', error)
 
-    const validationErrors = error?.response?.data?.errors
-    if (validationErrors) {
-      const transformedErrors = Object.keys(validationErrors).reduce((acc, key) => {
-        acc[key] = Array.isArray(validationErrors[key])
-          ? validationErrors[key][0]
-          : validationErrors[key]
-        return acc
-      }, {} as Record<string, string>)
+    const transformedErrors = transformValidationErrors(error)
+    if (transformedErrors) {
       actions.setErrors(transformedErrors)
-    } else {
-      toastError('Failed to send reset link. Please try again.')
     }
   }
 }
