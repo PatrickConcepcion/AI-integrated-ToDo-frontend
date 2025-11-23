@@ -54,7 +54,7 @@
                   {{ task.priority }}
                 </span>
                 <span class="text-xs text-gray-500">
-                  Archived: {{ new Date(task.archived_at).toLocaleDateString() }}
+                  Archived: {{ new Date(task.updated_at).toLocaleDateString() }}
                 </span>
               </div>
             </div>

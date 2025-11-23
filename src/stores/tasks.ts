@@ -1,11 +1,13 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import api from '../api/axios'
-import type { Task, UpdateTaskInput } from '../types'
+import type { Task, UpdateTaskInput, TaskStatus } from '../types'
 import { useApiError } from '../composables/useApiError'
+import { useToast } from '../composables/useToast'
 
 export const useTasksStore = defineStore('tasks', () => {
   const { handleApiError } = useApiError()
+  const { success } = useToast()
 
   const tasks = ref<Task[]>([])
   const archivedTasks = ref<Task[]>([])
@@ -69,11 +71,22 @@ export const useTasksStore = defineStore('tasks', () => {
 
     try {
       const response = await api.put(`/tasks/${taskId}`, taskData)
+      const updatedTask = response.data.data as Task
       const index = tasks.value.findIndex((t) => t.id === taskId)
-      if (index !== -1) {
-        tasks.value[index] = response.data.data
+
+      if (updatedTask.status === 'archived') {
+        tasks.value = tasks.value.filter((t) => t.id !== taskId)
+        archivedTasks.value = [...archivedTasks.value.filter((t) => t.id !== taskId), updatedTask]
+      } else {
+        if (index !== -1) {
+          tasks.value[index] = updatedTask
+        } else {
+          tasks.value.push(updatedTask)
+        }
+        archivedTasks.value = archivedTasks.value.filter((t) => t.id !== taskId)
       }
-      return response.data.data
+
+      return updatedTask
     } catch (err: unknown) {
       console.error('Failed to update task:', err)
       handleApiError(err, error, 'Failed to update task')
@@ -84,7 +97,7 @@ export const useTasksStore = defineStore('tasks', () => {
   }
 
   // Update only status
-  const updateTaskStatus = async (taskId: number, status: string): Promise<Task> => {
+  const updateTaskStatus = async (taskId: number, status: TaskStatus): Promise<Task> => {
     return await updateTask(taskId, { status })
   }
 
@@ -106,13 +119,15 @@ export const useTasksStore = defineStore('tasks', () => {
 
   // Toggle task completion
   const toggleComplete = async (taskId: number): Promise<Task> => {
+    const task = tasks.value.find((t) => t.id === taskId)
+    if (!task) {
+      throw new Error('Task not found in active tasks')
+    }
+    const nextStatus: TaskStatus = task.status === 'completed' ? 'todo' : 'completed'
+
     try {
-      const response = await api.post(`/tasks/${taskId}/complete`)
-      const index = tasks.value.findIndex((t) => t.id === taskId)
-      if (index !== -1) {
-        tasks.value[index] = response.data.data
-      }
-      return response.data.data
+      const updated = await updateTask(taskId, { status: nextStatus })
+      return updated
     } catch (err: unknown) {
       console.error('Failed to toggle task completion:', err)
       handleApiError(err, error, 'Failed to toggle task completion')
@@ -123,8 +138,8 @@ export const useTasksStore = defineStore('tasks', () => {
   // Archive task
   const archiveTask = async (taskId: number): Promise<void> => {
     try {
-      await api.post(`/tasks/${taskId}/archive`)
-      tasks.value = tasks.value.filter((t) => t.id !== taskId)
+      await updateTask(taskId, { status: 'archived' })
+      success('Task archived successfully.')
     } catch (err: unknown) {
       console.error('Failed to archive task:', err)
       handleApiError(err, error, 'Failed to archive task')
@@ -133,10 +148,13 @@ export const useTasksStore = defineStore('tasks', () => {
 
   // Unarchive task
   const unarchiveTask = async (taskId: number): Promise<Task> => {
+    const archivedTask = archivedTasks.value.find((t) => t.id === taskId)
+    const targetStatus: TaskStatus = archivedTask?.previous_status || 'todo'
+
     try {
-      const response = await api.post(`/tasks/${taskId}/unarchive`)
-      archivedTasks.value = archivedTasks.value.filter((t) => t.id !== taskId)
-      return response.data.data
+      const restoredTask = await updateTask(taskId, { status: targetStatus })
+      success('Task restored successfully.')
+      return restoredTask
     } catch (err: unknown) {
       console.error('Failed to unarchive task:', err)
       handleApiError(err, error, 'Failed to unarchive task')

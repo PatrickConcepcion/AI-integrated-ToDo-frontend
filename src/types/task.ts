@@ -1,42 +1,39 @@
 export type TaskPriority = 'low' | 'medium' | 'high'
+export type TaskStatus = 'todo' | 'in_progress' | 'completed' | 'archived'
 
 export interface Task {
   id: number
-  name: string
-  description?: string
-  completed: boolean
-  userId: number
-  createdAt: string
-  updatedAt: string
-  archivedAt?: string | null
-  title?: string
-  category_id?: number
-  priority?: TaskPriority
-  due_date?: string
-  notes?: string
-  status?: 'todo' | 'in_progress' | 'completed'
+  title: string
+  description: string | null
+  priority: TaskPriority | null
+  status: TaskStatus
+  previous_status: TaskStatus | null
+  category_id: number | null
+  category: Category | null
+  due_date: string | null
+  notes: string | null
+  user_id: number
+  created_at: string
+  updated_at: string
 }
 
 export interface CreateTaskInput {
-  name: string
+  title: string
   description?: string
-  title?: string
-  category_id?: string
+  category_id?: number | null
   priority?: TaskPriority
   due_date?: string
   notes?: string
 }
 
 export interface UpdateTaskInput {
-  name?: string
-  description?: string
-  completed?: boolean
   title?: string
-  category_id?: string
+  description?: string
+  category_id?: number | null
   priority?: TaskPriority
   due_date?: string
   notes?: string
-  status?: string
+  status?: TaskStatus
 }
 
 export interface Category {
