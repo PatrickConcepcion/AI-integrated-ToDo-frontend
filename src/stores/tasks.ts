@@ -123,7 +123,7 @@ export const useTasksStore = defineStore('tasks', () => {
     if (!task) {
       throw new Error('Task not found in active tasks')
     }
-    const nextStatus: TaskStatus = task?.status === 'completed' ? 'todo' : 'completed'
+    const nextStatus: TaskStatus = task.status === 'completed' ? 'todo' : 'completed'
 
     try {
       const updated = await updateTask(taskId, { status: nextStatus })
