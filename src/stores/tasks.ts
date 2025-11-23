@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import api from '../api/axios'
-import type { Task, UpdateTaskInput, TaskStatus } from '../types'
+import type { Task, UpdateTaskInput, TaskStatus } from '../types/task'
 import { useApiError } from '../composables/useApiError'
 import { useToast } from '../composables/useToast'
 
