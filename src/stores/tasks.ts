@@ -120,6 +120,9 @@ export const useTasksStore = defineStore('tasks', () => {
   // Toggle task completion
   const toggleComplete = async (taskId: number): Promise<Task> => {
     const task = tasks.value.find((t) => t.id === taskId)
+    if (!task) {
+      throw new Error('Task not found in active tasks')
+    }
     const nextStatus: TaskStatus = task?.status === 'completed' ? 'todo' : 'completed'
 
     try {
@@ -136,7 +139,6 @@ export const useTasksStore = defineStore('tasks', () => {
   const archiveTask = async (taskId: number): Promise<void> => {
     try {
       await updateTask(taskId, { status: 'archived' })
-      tasks.value = tasks.value.filter((t) => t.id !== taskId)
       success('Task archived successfully.')
     } catch (err: unknown) {
       console.error('Failed to archive task:', err)

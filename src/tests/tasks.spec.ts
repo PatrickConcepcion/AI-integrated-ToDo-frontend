@@ -36,23 +36,33 @@ describe('Tasks Store', () => {
         const mockTasks = [
             { 
                 id: 1, 
-                name: 'Task 1',
                 title: 'Task 1', 
+                description: null,
+                priority: null,
                 status: 'todo' as const,
-                completed: false,
-                userId: 1,
-                createdAt: '2025-11-20T00:00:00Z',
-                updatedAt: '2025-11-20T00:00:00Z'
+                previous_status: null,
+                category_id: null,
+                category: null,
+                due_date: null,
+                notes: null,
+                user_id: 1,
+                created_at: '2025-11-20T00:00:00Z',
+                updated_at: '2025-11-20T00:00:00Z'
             },
             { 
                 id: 2, 
-                name: 'Task 2',
                 title: 'Task 2', 
+                description: null,
+                priority: null,
                 status: 'completed' as const,
-                completed: true,
-                userId: 1,
-                createdAt: '2025-11-20T00:00:00Z',
-                updatedAt: '2025-11-20T00:00:00Z'
+                previous_status: null,
+                category_id: null,
+                category: null,
+                due_date: null,
+                notes: null,
+                user_id: 1,
+                created_at: '2025-11-20T00:00:00Z',
+                updated_at: '2025-11-20T00:00:00Z'
             }
         ]
 
@@ -71,13 +81,18 @@ describe('Tasks Store', () => {
         const newTask = { title: 'New Task' }
         const createdTask = { 
             id: 3, 
-            name: 'New Task',
-            ...newTask, 
+            ...newTask,
+            description: null,
+            priority: null,
             status: 'todo' as const,
-            completed: false,
-            userId: 1,
-            createdAt: '2025-11-20T00:00:00Z',
-            updatedAt: '2025-11-20T00:00:00Z'
+            previous_status: null,
+            category_id: null,
+            category: null,
+            due_date: null,
+            notes: null,
+            user_id: 1,
+            created_at: '2025-11-20T00:00:00Z',
+            updated_at: '2025-11-20T00:00:00Z'
         }
 
         vi.mocked(api.post).mockResolvedValueOnce({
@@ -93,17 +108,22 @@ describe('Tasks Store', () => {
         const store = useTasksStore()
         const initialTask = { 
             id: 1, 
-            name: 'Task 1',
             title: 'Task 1', 
+            description: null,
+            priority: null,
             status: 'todo' as const,
-            completed: false,
-            userId: 1,
-            createdAt: '2025-11-20T00:00:00Z',
-            updatedAt: '2025-11-20T00:00:00Z'
+            previous_status: null,
+            category_id: null,
+            category: null,
+            due_date: null,
+            notes: null,
+            user_id: 1,
+            created_at: '2025-11-20T00:00:00Z',
+            updated_at: '2025-11-20T00:00:00Z'
         }
         store.tasks = [initialTask]
 
-        const updatedTask = { ...initialTask, status: 'completed' as const, completed: true }
+        const updatedTask = { ...initialTask, status: 'completed' as const }
 
         vi.mocked(api.put).mockResolvedValueOnce({
             data: { data: updatedTask }
@@ -119,13 +139,18 @@ describe('Tasks Store', () => {
         const store = useTasksStore()
         const taskToDelete = { 
             id: 1, 
-            name: 'Task 1',
             title: 'Task 1',
+            description: null,
+            priority: null,
             status: 'todo' as const,
-            completed: false,
-            userId: 1,
-            createdAt: '2025-11-20T00:00:00Z',
-            updatedAt: '2025-11-20T00:00:00Z'
+            previous_status: null,
+            category_id: null,
+            category: null,
+            due_date: null,
+            notes: null,
+            user_id: 1,
+            created_at: '2025-11-20T00:00:00Z',
+            updated_at: '2025-11-20T00:00:00Z'
         }
         store.tasks = [taskToDelete]
 
