@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import api from '../api/axios'
-import type { Category } from '../types'
+import type { Category } from '../types/category'
 import { useApiError } from '../composables/useApiError'
 
 export const useCategoriesStore = defineStore('categories', () => {

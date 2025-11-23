@@ -1,3 +1,5 @@
+import type { Category } from './category'
+
 export type TaskPriority = 'low' | 'medium' | 'high'
 export type TaskStatus = 'todo' | 'in_progress' | 'completed' | 'archived'
 
@@ -34,13 +36,4 @@ export interface UpdateTaskInput {
   due_date?: string
   notes?: string
   status?: TaskStatus
-}
-
-export interface Category {
-  id: number
-  name: string
-  description?: string
-  color: string
-  created_at: string
-  updated_at: string
 }
