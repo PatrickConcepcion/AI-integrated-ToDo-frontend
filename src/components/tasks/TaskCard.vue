@@ -6,7 +6,7 @@
         class="mt-1 h-5 w-5 flex items-center justify-center rounded border border-gray-300 text-indigo-600 hover:bg-indigo-50"
         :title="isCompleted ? 'Mark as Incomplete' : 'Mark as Completed'"
       >
-        <span v-if="isCompleted">✓</span>
+        <Icon v-if="isCompleted" icon="mdi:check" :width="16" :height="16" />
       </button>
       <div class="flex-1">
         <h3 :class="['text-lg font-medium', isCompleted ? 'line-through text-gray-400' : 'text-gray-900']">
@@ -42,24 +42,24 @@
     <div class="flex items-center space-x-2">
       <button
         @click.stop="$emit('edit', task)"
-        class="text-gray-400 hover:text-blue-600 text-sm"
+        class="text-gray-400 hover:text-blue-600 transition-colors"
         title="Edit"
       >
-        ✏️
+        <Icon icon="mdi:pencil" :width="18" :height="18" />
       </button>
       <button
         @click.stop="$emit('archive', task.id)"
-        class="text-gray-400 hover:text-gray-600 text-sm"
+        class="text-gray-400 hover:text-gray-600 transition-colors"
         title="Archive"
       >
-        📦
+        <Icon icon="mdi:package" :width="18" :height="18" />
       </button>
       <button
         @click.stop="$emit('delete', task.id)"
-        class="text-gray-400 hover:text-red-600 text-sm"
+        class="text-gray-400 hover:text-red-600 transition-colors"
         title="Delete"
       >
-        🗑️
+        <Icon icon="mdi:delete" :width="18" :height="18" />
       </button>
     </div>
   </div>
@@ -67,6 +67,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import { Icon } from '@iconify/vue'
 import type { Task } from '../../types/task'
 
 const props = defineProps<{
