@@ -61,10 +61,11 @@
             <div class="flex items-center space-x-2">
               <button
                 @click="unarchiveTask(task.id)"
-                class="px-3 py-1 text-sm text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 rounded"
+                class="px-3 py-1 text-sm text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 rounded flex items-center gap-1 transition-colors"
                 title="Unarchive"
               >
-                ↩️ Restore
+                <Icon icon="mdi:undo" :width="16" :height="16" />
+                Restore
               </button>
             </div>
           </div>
@@ -76,6 +77,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { Icon } from '@iconify/vue'
 import { useTasksStore } from '../stores/tasks'
 import Header from '../components/Header.vue'
 

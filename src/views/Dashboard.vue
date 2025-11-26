@@ -131,7 +131,7 @@ import CreateTaskModal from '../components/tasks/CreateTaskModal.vue'
 import EditTaskModal from '../components/tasks/EditTaskModal.vue'
 import ConfirmationModal from '../components/modals/ConfirmationModal.vue'
 import Header from '../components/Header.vue'
-import type { Task } from '../types/task'
+import type { Task, TaskStatus } from '../types/task'
 
 const tasksStore = useTasksStore()
 const categoriesStore = useCategoriesStore()
@@ -207,7 +207,7 @@ const onDragStart = (task: any, event: DragEvent): void => {
   event.dataTransfer?.setData('text/plain', String(task.id))
 }
 
-const onDrop = async (status: string, event: DragEvent): Promise<void> => {
+const onDrop = async (status: TaskStatus, event: DragEvent): Promise<void> => {
   const id = Number(event.dataTransfer?.getData('text/plain'))
   if (!id) return
   try {
