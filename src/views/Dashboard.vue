@@ -191,11 +191,15 @@ const onDrop = async (status: TaskStatus, event: DragEvent): Promise<void> => {
   }
 }
 
+const todoTasks = computed(() => tasksStore.tasks.filter(t => t.status === 'todo'));
+const inProgressTasks = computed(() => tasksStore.tasks.filter(t => t.status === 'in_progress'));
+const completedTasks = computed(() => tasksStore.tasks.filter(t => t.status === 'completed'));
+
 const columns = computed(() => [
-  { title: 'Todo', id: 'todo' as TaskStatus, tasks: tasksStore.tasks.filter(t => t.status === 'todo') },
-  { title: 'In Progress', id: 'in_progress' as TaskStatus, tasks: tasksStore.tasks.filter(t => t.status === 'in_progress') },
-  { title: 'Completed', id: 'completed' as TaskStatus, tasks: tasksStore.tasks.filter(t => t.status === 'completed') },
-])
+  { title: 'Todo', id: 'todo' as TaskStatus, tasks: todoTasks.value },
+  { title: 'In Progress', id: 'in_progress' as TaskStatus, tasks: inProgressTasks.value },
+  { title: 'Completed', id: 'completed' as TaskStatus, tasks: completedTasks.value },
+]);
 
 const archiveTask = (taskId: number): void => {
   if (archivingTaskId.value) return // Prevent concurrent operations
