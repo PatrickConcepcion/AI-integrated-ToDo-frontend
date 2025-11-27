@@ -47,60 +47,34 @@
         <div class="text-gray-500">Loading tasks...</div>
       </div>
 
-      <div v-else class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <!-- Todo Column -->
-        <div class="bg-gray-100 rounded-lg p-3" @dragover.prevent @drop="onDrop('todo', $event)">
+      <div v-else class="flex gap-6 overflow-x-scroll pb-4 lg:grid lg:grid-cols-3 lg:overflow-x-visible">
+        <!-- Dynamic Columns -->
+        <div
+          v-for="column in columns"
+          :key="column.id"
+          class="bg-gray-100 rounded-lg p-3 min-w-[320px] flex-shrink-0 lg:min-w-0"
+          @dragover.prevent
+          @drop="onDrop(column.id, $event)"
+        >
           <div class="flex items-center justify-between mb-3">
-            <h3 class="text-sm font-semibold uppercase tracking-wide text-gray-600">Todo</h3>
-            <span class="text-xs text-gray-500">{{ todoTasks.length }}</span>
+            <h3 class="text-sm font-semibold uppercase tracking-wide text-gray-600">{{ column.title }}</h3>
+            <span class="text-xs text-gray-500">{{ column.tasks.length }}</span>
           </div>
-          <div class="space-y-3 min-h-[100px]">
+          <div class="space-y-3 h-[calc(100vh-200px)] overflow-y-auto">
             <div
-              v-for="task in todoTasks"
+              v-for="task in column.tasks"
               :key="task.id"
               class="bg-white p-4 rounded-lg shadow hover:shadow-md transition-shadow cursor-move"
               draggable="true"
               @dragstart="onDragStart(task, $event)"
             >
-              <TaskCard :task="task" @archive="archiveTask" @delete="deleteTask" @complete="toggleComplete" @edit="openEditModal" />
-            </div>
-          </div>
-        </div>
-
-        <!-- In Progress Column -->
-        <div class="bg-gray-100 rounded-lg p-3" @dragover.prevent @drop="onDrop('in_progress', $event)">
-          <div class="flex items-center justify-between mb-3">
-            <h3 class="text-sm font-semibold uppercase tracking-wide text-gray-600">In Progress</h3>
-            <span class="text-xs text-gray-500">{{ inProgressTasks.length }}</span>
-          </div>
-          <div class="space-y-3 min-h-[100px]">
-            <div
-              v-for="task in inProgressTasks"
-              :key="task.id"
-              class="bg-white p-4 rounded-lg shadow hover:shadow-md transition-shadow cursor-move"
-              draggable="true"
-              @dragstart="onDragStart(task, $event)"
-            >
-              <TaskCard :task="task" @archive="archiveTask" @delete="deleteTask" @complete="toggleComplete" @edit="openEditModal" />
-            </div>
-          </div>
-        </div>
-
-        <!-- Completed Column -->
-        <div class="bg-gray-100 rounded-lg p-3" @dragover.prevent @drop="onDrop('completed', $event)">
-          <div class="flex items-center justify-between mb-3">
-            <h3 class="text-sm font-semibold uppercase tracking-wide text-gray-600">Completed</h3>
-            <span class="text-xs text-gray-500">{{ completedTasks.length }}</span>
-          </div>
-          <div class="space-y-3 min-h-[100px]">
-            <div
-              v-for="task in completedTasks"
-              :key="task.id"
-              class="bg-white p-4 rounded-lg shadow hover:shadow-md transition-shadow cursor-move"
-              draggable="true"
-              @dragstart="onDragStart(task, $event)"
-            >
-              <TaskCard :task="task" @archive="archiveTask" @delete="deleteTask" @complete="toggleComplete" @edit="openEditModal" />
+              <TaskCard
+                :task="task"
+                @archive="archiveTask"
+                @delete="deleteTask"
+                @complete="toggleComplete"
+                @edit="openEditModal"
+              />
             </div>
           </div>
         </div>
@@ -217,9 +191,11 @@ const onDrop = async (status: TaskStatus, event: DragEvent): Promise<void> => {
   }
 }
 
-const todoTasks = computed(() => tasksStore.tasks.filter(t => t.status === 'todo'))
-const inProgressTasks = computed(() => tasksStore.tasks.filter(t => t.status === 'in_progress'))
-const completedTasks = computed(() => tasksStore.tasks.filter(t => t.status === 'completed'))
+const columns = computed(() => [
+  { title: 'Todo', id: 'todo' as TaskStatus, tasks: tasksStore.tasks.filter(t => t.status === 'todo') },
+  { title: 'In Progress', id: 'in_progress' as TaskStatus, tasks: tasksStore.tasks.filter(t => t.status === 'in_progress') },
+  { title: 'Completed', id: 'completed' as TaskStatus, tasks: tasksStore.tasks.filter(t => t.status === 'completed') },
+])
 
 const archiveTask = (taskId: number): void => {
   if (archivingTaskId.value) return // Prevent concurrent operations
