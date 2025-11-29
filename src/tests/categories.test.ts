@@ -104,6 +104,43 @@ describe('Categories Store', () => {
         expect(store.loading).toBe(false)
     })
 
+    it('should set loading state during create', async () => {
+        const store = useCategoriesStore()
+        const newCategory = { name: 'New Category' }
+        const createdCategory = { id: 1, ...newCategory }
+        vi.mocked(api.post).mockResolvedValue({ data: { data: createdCategory } })
+
+        const createPromise = store.createCategory(newCategory)
+        expect(store.loading).toBe(true)
+
+        await createPromise
+        expect(store.loading).toBe(false)
+    })
+
+    it('should set loading state during update', async () => {
+        const store = useCategoriesStore()
+        const updatedData = { name: 'Updated Category' }
+        const updatedCategory = { id: 1, ...updatedData }
+        vi.mocked(api.put).mockResolvedValue({ data: { data: updatedCategory } })
+
+        const updatePromise = store.updateCategory(1, updatedData)
+        expect(store.loading).toBe(true)
+
+        await updatePromise
+        expect(store.loading).toBe(false)
+    })
+
+    it('should set loading state during delete', async () => {
+        const store = useCategoriesStore()
+        vi.mocked(api.delete).mockResolvedValue({})
+
+        const deletePromise = store.deleteCategory(1)
+        expect(store.loading).toBe(true)
+
+        await deletePromise
+        expect(store.loading).toBe(false)
+    })
+
     it('should handle fetch error and set error state', async () => {
         const store = useCategoriesStore()
         const error = new Error('Network error')
