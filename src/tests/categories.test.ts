@@ -25,6 +25,12 @@ vi.mock('../composables/useToast', () => ({
     })
 }))
 
+// Mock useApiError
+vi.mock('../composables/useApiError', () => ({
+    useApiError: () => ({
+        handleApiError: vi.fn()
+    })
+}))
 describe('Categories Store', () => {
     beforeEach(() => {
         setActivePinia(createPinia())
