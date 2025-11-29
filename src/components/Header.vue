@@ -58,7 +58,7 @@
           >
             Users
           </RouterLink>
-          <div v-if="authStore.user" class="relative">
+          <div v-if="authStore.user" class="relative" ref="userMenuContainer">
             <button
               @click="toggleUserMenu"
               class="flex items-center text-gray-700 hover:text-indigo-600 px-3 py-2 text-sm font-medium"
@@ -204,7 +204,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 
@@ -212,10 +212,29 @@ const router = useRouter()
 const authStore = useAuthStore()
 const mobileMenuOpen = ref(false)
 const userMenuOpen = ref(false)
+const userMenuContainer = ref<HTMLElement | null>(null)
 
 const toggleUserMenu = () => {
   userMenuOpen.value = !userMenuOpen.value
 }
+
+const handleClickOutside = (event: MouseEvent) => {
+  if (
+    userMenuOpen.value &&
+    userMenuContainer.value &&
+    !userMenuContainer.value.contains(event.target as Node)
+  ) {
+    userMenuOpen.value = false
+  }
+}
+
+onMounted(() => {
+  document.addEventListener('click', handleClickOutside)
+})
+
+onUnmounted(() => {
+  document.removeEventListener('click', handleClickOutside)
+})
 
 const goToChangePassword = () => {
   userMenuOpen.value = false
