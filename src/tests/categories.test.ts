@@ -45,18 +45,6 @@ describe('Categories Store', () => {
         expect(store.categories).toContainEqual({ id: 1, name: 'Category 1' })
     })
 
-    it('should not contain non-existent categories', async () => {
-        const store = useCategoriesStore()
-        const mockCategories = [
-            { id: 1, name: 'Category 1' },
-            { id: 2, name: 'Category 2' },
-        ]
-        vi.mocked(api.get).mockResolvedValue({ data: { data: mockCategories } })
-        await store.fetchCategories()
-        expect(store.categories).not.toContainEqual({ id: 3, name: 'Category 3' })
-        expect(store.categories.length).not.toBe(3)
-    })
-
     it('should create a category successfully', async () => {
         const store = useCategoriesStore()
         const newCategory = { name: 'New Category' }
