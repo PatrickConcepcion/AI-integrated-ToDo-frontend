@@ -41,8 +41,6 @@ describe('Categories Store', () => {
         await store.fetchCategories()
         expect(api.get).toHaveBeenCalledWith('/categories')
         expect(store.categories).toEqual(mockCategories)
-        expect(store.categories.length).toBe(2)
-        expect(store.categories).toContainEqual({ id: 1, name: 'Category 1' })
     })
 
     it('should create a category successfully', async () => {
