@@ -4,11 +4,36 @@
 
     <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <!-- Page Header -->
-      <div class="mb-6">
-        <h1 class="text-3xl font-bold text-gray-900">AI Task Assistant</h1>
-        <p class="mt-2 text-sm text-gray-600">
-          Ask me anything about your tasks, or tell me to create, update, or delete tasks using natural language.
-        </p>
+      <div class="mb-6 flex items-start justify-between gap-4">
+        <div class="flex-1">
+          <h1 class="text-2xl sm:text-3xl font-bold text-gray-900">AI Task Assistant</h1>
+          <p class="mt-2 text-sm text-gray-600">
+            Ask me anything about your tasks, or tell me to create, update, or delete tasks using natural language.
+          </p>
+        </div>
+
+        <!-- Clear Button - Icon Only (Mobile/Tablet) -->
+        <button
+          v-if="aiStore.messages.length > 0"
+          type="button"
+          @click="handleClearChat"
+          :disabled="aiStore.loading"
+          class="lg:hidden rounded-full w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center bg-gray-200 text-gray-700 hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex-shrink-0"
+          aria-label="Clear chat history"
+        >
+          <Icon icon="mdi:close-circle" class="w-4 h-4 sm:w-5 sm:h-5" />
+        </button>
+
+        <!-- Clear Button - Text Only (Desktop) -->
+        <button
+          v-if="aiStore.messages.length > 0"
+          type="button"
+          @click="handleClearChat"
+          :disabled="aiStore.loading"
+          class="hidden lg:inline-flex items-center justify-center px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex-shrink-0"
+        >
+          Clear
+        </button>
       </div>
 
       <!-- Chat Container -->
@@ -106,31 +131,43 @@
 
         <!-- Input Area -->
         <div class="border-t border-gray-200 p-4">
-          <form @submit.prevent="handleSubmit" class="flex gap-2">
-            <input
+          <form @submit.prevent="handleSubmit" class="flex gap-2 items-end">
+            <!-- Textarea -->
+            <textarea
+              ref="textareaRef"
               v-model="inputMessage"
-              type="text"
-              placeholder="Type your message... (e.g., 'Create a task: Buy groceries tomorrow')"
-              class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 placeholder-gray-500"
+              rows="1"
+              placeholder="Send a message..."
+              class="flex-1 px-3 py-2 sm:px-4 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 placeholder-gray-500 resize-none overflow-y-auto no-scrollbar"
               :disabled="aiStore.loading"
+              @input="handleTextareaInput"
+              @keydown.enter="handleEnterKey"
+              aria-label="Message input"
             />
-            <button
-              type="submit"
-              :disabled="!inputMessage.trim() || aiStore.loading"
-              class="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            >
-              <span v-if="!aiStore.loading">Send</span>
-              <span v-else>...</span>
-            </button>
-            <button
-              v-if="aiStore.messages.length > 0"
-              type="button"
-              @click="handleClearChat"
-              :disabled="aiStore.loading"
-              class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            >
-              Clear
-            </button>
+
+            <!-- Buttons Container -->
+            <div class="flex gap-1.5 sm:gap-2 flex-shrink-0">
+              <!-- Send Button - Icon Only (Mobile/Tablet) -->
+              <button
+                type="submit"
+                :disabled="!inputMessage.trim() || aiStore.loading"
+                class="lg:hidden rounded-full w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center bg-indigo-600 text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex-shrink-0"
+                aria-label="Send message"
+              >
+                <Icon v-if="!aiStore.loading" icon="mdi:arrow-up" class="w-[18px] h-[18px] sm:w-5 sm:h-5" />
+                <span v-else class="text-xs">...</span>
+              </button>
+
+              <!-- Send Button - Text Only (Desktop) -->
+              <button
+                type="submit"
+                :disabled="!inputMessage.trim() || aiStore.loading"
+                class="hidden lg:inline-flex items-center justify-center px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                <span v-if="!aiStore.loading">Send</span>
+                <span v-else>...</span>
+              </button>
+            </div>
           </form>
         </div>
       </div>
@@ -169,6 +206,7 @@ import { useToast } from '../composables/useToast'
 import Header from '../components/Header.vue'
 import ConfirmationModal from '../components/modals/ConfirmationModal.vue'
 import { marked } from 'marked'
+import { Icon } from '@iconify/vue'
 
 const aiStore = useAiStore()
 const tasksStore = useTasksStore()
@@ -176,6 +214,34 @@ const { toastError } = useToast()
 
 const inputMessage = ref('')
 const messagesContainer = ref<HTMLElement | null>(null)
+const textareaRef = ref<HTMLTextAreaElement | null>(null)
+
+// Auto-expanding textarea logic
+const maxRows = 4
+const autoExpandTextarea = async () => {
+  await nextTick()
+  if (!textareaRef.value) return
+
+  // Reset height to auto to get accurate scrollHeight
+  textareaRef.value.style.height = 'auto'
+
+  // Calculate max height: roughly 24px per row + 16px padding
+  const computed = getComputedStyle(textareaRef.value)
+  const lineHeight = parseFloat(computed.lineHeight)
+  const paddingTop = parseFloat(computed.paddingTop)
+  const paddingBottom = parseFloat(computed.paddingBottom)
+  const maxHeight = maxRows * lineHeight + paddingTop + paddingBottom
+
+  // Set the height to scrollHeight, but cap at maxHeight
+  const newHeight = Math.min(textareaRef.value.scrollHeight, maxHeight)
+  textareaRef.value.style.height = `${newHeight}px`
+}
+
+const resetHeight = () => {
+  if (textareaRef.value) {
+    textareaRef.value.style.height = 'auto'
+  }
+}
 
 // Confirmation modal state
 const confirmationState = reactive({
@@ -198,6 +264,27 @@ const suggestedPrompts = [
  */
 const sendPrompt = (prompt: string) => {
   inputMessage.value = prompt
+  nextTick(() => autoExpandTextarea())
+  handleSubmit()
+}
+
+/**
+ * Handle textarea input event
+ */
+const handleTextareaInput = () => {
+  autoExpandTextarea()
+}
+
+/**
+ * Handle Enter key press
+ */
+const handleEnterKey = (event: KeyboardEvent) => {
+  if (event.shiftKey) {
+    // Allow newline on Shift+Enter
+    return
+  }
+  // Prevent default and submit on Enter
+  event.preventDefault()
   handleSubmit()
 }
 
@@ -209,6 +296,7 @@ const handleSubmit = async () => {
 
   const message = inputMessage.value
   inputMessage.value = ''
+  resetHeight()
 
   await aiStore.sendMessage(message)
 
