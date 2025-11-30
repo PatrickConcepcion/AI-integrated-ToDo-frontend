@@ -21,7 +21,7 @@
           class="lg:hidden rounded-full w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center bg-gray-200 text-gray-700 hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex-shrink-0"
           aria-label="Clear chat history"
         >
-          <Icon icon="mdi:close-circle" :width="16" :height="16" class="sm:w-5 sm:h-5" />
+          <Icon icon="mdi:close-circle" class="w-4 h-4 sm:w-5 sm:h-5" />
         </button>
 
         <!-- Clear Button - Text Only (Desktop) -->
@@ -138,10 +138,11 @@
               v-model="inputMessage"
               rows="1"
               placeholder="Send a message..."
-              class="flex-1 px-3 py-2 sm:px-4 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 placeholder-gray-500 resize-none overflow-y-auto"
+              class="flex-1 px-3 py-2 sm:px-4 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 placeholder-gray-500 resize-none overflow-y-auto no-scrollbar"
               :disabled="aiStore.loading"
               @input="handleTextareaInput"
               @keydown.enter="handleEnterKey"
+              aria-label="Message input"
             />
 
             <!-- Buttons Container -->
@@ -153,7 +154,7 @@
                 class="lg:hidden rounded-full w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center bg-indigo-600 text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex-shrink-0"
                 aria-label="Send message"
               >
-                <Icon v-if="!aiStore.loading" icon="mdi:arrow-up" :width="18" :height="18" class="sm:w-5 sm:h-5" />
+                <Icon v-if="!aiStore.loading" icon="mdi:arrow-up" class="w-[18px] h-[18px] sm:w-5 sm:h-5" />
                 <span v-else class="text-xs">...</span>
               </button>
 
@@ -163,7 +164,7 @@
                 :disabled="!inputMessage.trim() || aiStore.loading"
                 class="hidden lg:inline-flex items-center justify-center px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
-                <span v-if="!aiStore.loading">SEND</span>
+                <span v-if="!aiStore.loading">Send</span>
                 <span v-else>...</span>
               </button>
             </div>
@@ -225,9 +226,15 @@ const autoExpandTextarea = async () => {
   textareaRef.value.style.height = 'auto'
 
   // Calculate max height: roughly 24px per row + 16px padding
-  const maxHeight = maxRows * 24 + 16
+  const computed = getComputedStyle(textareaRef.value)
+  const lineHeight = parseFloat(computed.lineHeight)
+  const paddingTop = parseFloat(computed.paddingTop)
+  const paddingBottom = parseFloat(computed.paddingBottom)
+  const maxHeight = maxRows * lineHeight + paddingTop + paddingBottom
+
+  // Set the height to scrollHeight, but cap at maxHeight
   const newHeight = Math.min(textareaRef.value.scrollHeight, maxHeight)
-  textareaRef.value.style.height = newHeight + 'px'
+  textareaRef.value.style.height = `${newHeight}px`
 }
 
 const resetHeight = () => {
