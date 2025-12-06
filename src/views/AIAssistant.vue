@@ -200,6 +200,7 @@
 
 <script setup lang="ts">
 import { ref, reactive, nextTick, onMounted, watch } from 'vue'
+import { watchThrottled } from '@vueuse/core'
 import { useAiStore } from '../stores/ai'
 import { useTasksStore } from '../stores/tasks'
 import { useToast } from '../composables/useToast'
@@ -369,12 +370,13 @@ watch(
   }
 )
 
-// Watch for streaming content changes and scroll to bottom
-watch(
+// Watch for streaming content changes and scroll to bottom (throttled)
+watchThrottled(
   () => aiStore.messages[aiStore.messages.length - 1]?.content,
   () => {
     scrollToBottom()
-  }
+  },
+  { throttle: 100 }
 )
 
 // Fetch tasks and message history on mount
