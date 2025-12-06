@@ -21,7 +21,7 @@ export const useAiStore = defineStore('ai', () => {
   const error = ref<string | null>(null)
 
   /**
-   * Send message to AI and get response
+   * Send message to AI and get streaming response
    */
   const sendMessage = async (userMessage: string): Promise<void> => {
     if (!userMessage.trim()) return
@@ -38,36 +38,78 @@ export const useAiStore = defineStore('ai', () => {
     loading.value = true
     error.value = null
 
+    // Create placeholder for AI response
+    const aiMsgId = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+    const aiMsg: ChatMessage = {
+      id: aiMsgId,
+      role: 'assistant',
+      content: '',
+      timestamp: new Date(),
+    }
+    messages.value.push(aiMsg)
+
+    // Helper to safely locate the AI message by ID (handles concurrent array mutations)
+    const findAiMsg = () => messages.value.find(m => m.id === aiMsgId)
+
     try {
       const response = await api.post('/ai/chat', {
         message: userMessage,
+      }, {
+        responseType: 'stream',
+        adapter: 'fetch',
       })
 
-      // Add AI response to chat
-      const aiMsg: ChatMessage = {
-        id: (Date.now() + 1).toString(),
-        role: 'assistant',
-        content: response.data.response,
-        timestamp: new Date(),
-        actionsPerformed: response.data.actions_performed || undefined,
+      const reader = response.data.getReader()
+      const decoder = new TextDecoder()
+      let buffer = ''
+
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+
+        const chunk = decoder.decode(value, { stream: true })
+        buffer += chunk
+        const lines = buffer.split('\n')
+        
+        // Keep the last incomplete line in the buffer
+        buffer = lines.pop() || ''
+
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            const data = line.slice(6).trim()
+            
+            if (data === '[DONE]') {
+              reader.cancel()
+              break
+            }
+
+            try {
+              const parsed = JSON.parse(data)
+              const targetMsg = findAiMsg()
+              
+              if (parsed.chunk && targetMsg) {
+                targetMsg.content += parsed.chunk
+              } else if (parsed.error && targetMsg) {
+                error.value = parsed.error
+                targetMsg.content += `\n\nError: ${parsed.error}`
+              }
+            } catch {
+              // Ignore parse errors for incomplete chunks
+            }
+          }
+        }
       }
-      messages.value.push(aiMsg)
 
     } catch (err: unknown) {
       const errorMessage = err instanceof Error
-        ? (err as any).response?.data?.message || 'Failed to get AI response'
+        ? err.message || 'Failed to get AI response'
         : 'Failed to get AI response'
 
       error.value = errorMessage
-
-      // Add error message to chat
-      const errorMsg: ChatMessage = {
-        id: (Date.now() + 1).toString(),
-        role: 'assistant',
-        content: `Sorry, I encountered an error: ${errorMessage}`,
-        timestamp: new Date(),
+      const targetMsg = findAiMsg()
+      if (targetMsg) {
+        targetMsg.content = `Sorry, I encountered an error: ${errorMessage}`
       }
-      messages.value.push(errorMsg)
 
     } finally {
       loading.value = false

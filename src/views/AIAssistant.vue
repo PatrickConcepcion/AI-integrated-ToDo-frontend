@@ -85,8 +85,17 @@
                   : 'bg-gray-100 text-gray-900'
               ]"
             >
+              <!-- Loading dots inside AI message bubble when waiting for first response -->
               <div
-                v-if="message.role === 'assistant'"
+                v-if="message.role === 'assistant' && !message.content && aiStore.loading"
+                class="flex space-x-2 py-1"
+              >
+                <div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                <div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0.1s"></div>
+                <div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0.2s"></div>
+              </div>
+              <div
+                v-else-if="message.role === 'assistant'"
                 class="text-sm prose prose-sm max-w-none"
                 v-html="renderMarkdown(message.content)"
               ></div>
@@ -107,6 +116,7 @@
               </div>
 
               <div
+                v-if="message.role === 'user' || message.content"
                 :class="[
                   'text-xs mt-1',
                   message.role === 'user' ? 'text-indigo-200' : 'text-gray-500'
@@ -117,16 +127,6 @@
             </div>
           </div>
 
-          <!-- Loading Indicator -->
-          <div v-if="aiStore.loading" class="flex justify-start">
-            <div class="bg-gray-100 rounded-lg px-4 py-3">
-              <div class="flex space-x-2">
-                <div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                <div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0.1s"></div>
-                <div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0.2s"></div>
-              </div>
-            </div>
-          </div>
         </div>
 
         <!-- Input Area -->
@@ -200,6 +200,7 @@
 
 <script setup lang="ts">
 import { ref, reactive, nextTick, onMounted, watch } from 'vue'
+import { watchThrottled } from '@vueuse/core'
 import { useAiStore } from '../stores/ai'
 import { useTasksStore } from '../stores/tasks'
 import { useToast } from '../composables/useToast'
@@ -367,6 +368,15 @@ watch(
   () => {
     scrollToBottom()
   }
+)
+
+// Watch for streaming content changes and scroll to bottom (throttled)
+watchThrottled(
+  () => aiStore.messages[aiStore.messages.length - 1]?.content,
+  () => {
+    scrollToBottom()
+  },
+  { throttle: 100 }
 )
 
 // Fetch tasks and message history on mount
